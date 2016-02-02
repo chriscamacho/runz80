@@ -9,6 +9,9 @@
 #include "libz80/z80.h"
 #include "main.h"
 
+#include <gmodule.h>
+#include "plugin.h"
+
 #include <gtk/gtk.h>
 
 GtkWidget *mainwin, *runButton;
@@ -21,6 +24,9 @@ static byte memory[ 0x10000 ];
 static Z80Context context;
 char tmpstr[80];
 gboolean running = FALSE;
+
+// list of plugin instances
+GList *plugins;
 
 void close_app(GtkWidget* widget,gpointer user_data)
 {
@@ -148,7 +154,22 @@ static byte context_io_read_callback(int param, ushort address)
 
 static void context_io_write_callback(int param, ushort address, byte data)
 {
-    printf("PW %04x %02x\n", address, data);
+    address = address & 0xff; // port address
+    gboolean handled = FALSE;
+    for (GList* l = plugins; l != NULL; l = l->next) {
+        plugInstStruct* i = (plugInstStruct*)l->data;
+        int a =*(int*)i->data[0];
+        int r = i->plug.getPortSize();
+        if (address>=a && address<a+r) {
+            // IO port in range
+            i->plug.setPort(i, a, data);
+            handled = TRUE;
+        }
+    }
+//    printf("PW %04x %02x\n", address, data);
+    if (!handled) {
+        g_print("warning port write not handled by a plugin (0x%02x)=0x%02x\n",address,data);
+    }
 }
 
 void init_emulator()
@@ -186,8 +207,37 @@ static void dump_z80_state( void )
     on_addressChange(NULL,NULL);
 }
 
+
+
 int main( int argc, char **argv ) {
 
+    // load in our single plugin
+    // with three instances
+    // in future this will come from a
+    // "machine" config file
+    pluginStruct simplePlugin;
+    plugInstStruct pAdHi,pAdLo,pDat;
+    
+    sprintf(simplePlugin.libName,"simpleOut");
+    integratePlugin(&simplePlugin);
+    
+    pAdHi.plug=simplePlugin;
+    pAdHi.plug.initialise(&pAdHi,0x02,0);
+    namePluginInstance(&pAdHi,"Address HI");
+
+    pAdLo.plug=simplePlugin;
+    pAdLo.plug.initialise(&pAdLo,0x04,0);
+    namePluginInstance(&pAdLo,"Address LO");
+
+    pDat.plug=simplePlugin;
+    pDat.plug.initialise(&pDat,0x06,0);
+    namePluginInstance(&pDat,"Data");
+
+    plugins=g_list_append (plugins, &pAdHi);
+    plugins=g_list_append (plugins, &pAdLo);
+    plugins=g_list_append (plugins, &pDat);
+    
+    
     for (int i=0; i<0x10000; i++) {
         memory[i] = 0;
     }
@@ -195,10 +245,7 @@ int main( int argc, char **argv ) {
 
     GtkBuilder *gtkBuilder;
 
-    //if( ! g_thread_supported() ) g_thread_init( NULL );
-    //gdk_threads_init();
-    //gdk_threads_enter();
-    
+   
     gtk_init (&argc, &argv);
 
     gtkBuilder= gtk_builder_new();
