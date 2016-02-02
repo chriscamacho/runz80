@@ -26,7 +26,8 @@ typedef struct {
 typedef struct {
     pluginStruct plug;
     char name[80];
-    void** data;
+    void** data;        // TODO should this be a pointer to user struct ??
+                        // TODO should addressStart and portStart be seperate
 } plugInstStruct;
 
 

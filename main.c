@@ -27,6 +27,7 @@ gboolean running = FALSE;
 
 // list of plugin instances
 GList *plugins;
+guint idle_id;      // thread idle id
 
 void close_app(GtkWidget* widget,gpointer user_data)
 {
@@ -52,13 +53,21 @@ void on_addressChange(GtkWidget* widget,gpointer user_data)
 
 }
 
+
+
+gboolean on_idle( gpointer data );
+
 void on_run(GtkWidget* widget,gpointer user_data)
 {
 
     if (running==FALSE) {
-        if (!context.halted) running = TRUE;
+        if (!context.halted) {
+            running = TRUE;
+            idle_id = gdk_threads_add_idle ( on_idle, NULL );
+        }
     } else {
         running = FALSE;
+        g_source_remove (idle_id);
     }
 
     if (running) {
@@ -66,6 +75,21 @@ void on_run(GtkWidget* widget,gpointer user_data)
     } else {
         gtk_button_set_label ((GtkButton*)runButton,"Run");
     }
+}
+
+
+gboolean on_idle( gpointer data )
+{
+//    gdk_threads_enter();  // TODO ...and I'm supposed to do what instead
+    if(!context.halted && running==TRUE) {
+        Z80Execute(&context);
+        dump_z80_state();
+    } else {
+        running = TRUE;
+        on_run(NULL, NULL);
+    }
+//    gdk_threads_leave();
+    return( TRUE );
 }
 
 void on_step(GtkWidget* widget,gpointer user_data)
@@ -119,20 +143,6 @@ void on_load(GtkWidget* widget,gpointer user_data)
 
     gtk_widget_destroy (dialog);
 
-}
-
-gboolean on_idle( gpointer data )
-{
-    if(!context.halted && running==TRUE) {
-        Z80Execute(&context);
-//        gdk_threads_enter();
-        dump_z80_state();
-//        gdk_threads_leave();
-    } else {
-        running = FALSE;
-    }
-
-    return( TRUE );
 }
 
 static byte context_mem_read_callback(int param, ushort address)
@@ -211,32 +221,6 @@ static void dump_z80_state( void )
 
 int main( int argc, char **argv ) {
 
-    // load in our single plugin
-    // with three instances
-    // in future this will come from a
-    // "machine" config file
-    pluginStruct simplePlugin;
-    plugInstStruct pAdHi,pAdLo,pDat;
-    
-    sprintf(simplePlugin.libName,"simpleOut");
-    integratePlugin(&simplePlugin);
-    
-    pAdHi.plug=simplePlugin;
-    pAdHi.plug.initialise(&pAdHi,0x02,0);
-    namePluginInstance(&pAdHi,"Address HI");
-
-    pAdLo.plug=simplePlugin;
-    pAdLo.plug.initialise(&pAdLo,0x04,0);
-    namePluginInstance(&pAdLo,"Address LO");
-
-    pDat.plug=simplePlugin;
-    pDat.plug.initialise(&pDat,0x06,0);
-    namePluginInstance(&pDat,"Data");
-
-    plugins=g_list_append (plugins, &pAdHi);
-    plugins=g_list_append (plugins, &pAdLo);
-    plugins=g_list_append (plugins, &pDat);
-    
     
     for (int i=0; i<0x10000; i++) {
         memory[i] = 0;
@@ -270,10 +254,39 @@ int main( int argc, char **argv ) {
     memCont2 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"memCont2"));
 
     g_object_unref ( G_OBJECT(gtkBuilder) );
-    gdk_threads_add_idle ( on_idle, NULL );
     gtk_widget_show_all ( mainwin );
+
+
+
+    // load in our single plugin
+    // with three instances
+    // in future this will come from a
+    // "machine" config file
+    pluginStruct simplePlugin;
+    plugInstStruct pAdHi,pAdLo,pDat;
+    
+    sprintf(simplePlugin.libName,"simpleOut");
+    integratePlugin(&simplePlugin);
+    
+    pAdHi.plug=simplePlugin;
+    namePluginInstance(&pAdHi,"Address HI");
+    pAdHi.plug.initialise(&pAdHi,0x02,0);
+
+    pAdLo.plug=simplePlugin;
+    namePluginInstance(&pAdLo,"Address LO");
+    pAdLo.plug.initialise(&pAdLo,0x04,0);
+
+    pDat.plug=simplePlugin;
+    namePluginInstance(&pDat,"Data");
+    pDat.plug.initialise(&pDat,0x06,0);
+
+    plugins=g_list_append (plugins, &pAdHi);
+    plugins=g_list_append (plugins, &pAdLo);
+    plugins=g_list_append (plugins, &pDat);
+
+
     gtk_main ();
-    //gdk_threads_leave();
+
     
     return 0;
 }
