@@ -3,34 +3,33 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
+typedef struct {
+    GtkWindow* window;
+    GtkLabel* label;
+} simpleOutVars;
 
-G_MODULE_EXPORT void initialise(void* inst, int portStart, int addressStart) {
-    // first 2 ints of plugin instances MUST be portStart and addressStart
+
+G_MODULE_EXPORT void initialise(void* inst) {
+
     plugInstStruct* pl = (plugInstStruct*)inst;
 
-    // an array of pointers...
-    pl->data = malloc(sizeof(void*)*4);
-    int** p= (int**)pl->data;
-    p[0] = malloc(sizeof(int));
-    *p[0] = portStart;
-    p[1] = malloc(sizeof(int));
-    *p[1] = addressStart;
+    pl->data = malloc(sizeof(simpleOutVars));
 
 // the plugins GUI
-    p[2] = malloc(sizeof(GtkWidget*));
-    p[2] = (void*)gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_deletable ((GtkWindow*)p[2], FALSE);
+    simpleOutVars* vars = ((simpleOutVars*)pl->data);
+    vars->window = (GtkWindow*)gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_deletable (vars->window, FALSE);
 
-    p[3] = malloc(sizeof(GtkWidget*));
-    p[3] = (void*)gtk_label_new ("");
+
+    vars->label = (GtkLabel*)gtk_label_new ("");
 
 
     gchar* l = g_strdup_printf ("Port %s = 0x%02x",(const gchar *)&pl->name,0); 
-    gtk_label_set_text ((GtkLabel*)p[3],l);
+    gtk_label_set_text (vars->label,l);
     g_free(l);
     
-    gtk_container_add (GTK_CONTAINER ((GtkWidget*)p[2]), (GtkWidget*)p[3]);
-    gtk_widget_show_all ( (GtkWidget*)p[2] );
+    gtk_container_add (GTK_CONTAINER (vars->window), (GtkWidget*)vars->label);
+    gtk_widget_show_all ( (GtkWidget*)vars->window );
 
 }
 
@@ -39,10 +38,10 @@ G_MODULE_EXPORT int getAddressSize() { return 0; }
 
 G_MODULE_EXPORT byte getPort(void* inst, int port) { return 0xff; }
 G_MODULE_EXPORT void setPort(void* inst, int port, byte val) {
-    g_print("port 0x%02x (%s) set to 0x%02x\n", port, ((plugInstStruct*)inst)->name, val);
+    //g_print("port 0x%02x (%s) set to 0x%02x\n", port, ((plugInstStruct*)inst)->name, val);
     gchar* l = g_strdup_printf ("Port %s = 0x%02x",((plugInstStruct*)inst)->name, val);
-    void** p= (void**)((plugInstStruct*)inst)->data;
-    gtk_label_set_text ((GtkLabel*)p[3],l);
+    simpleOutVars* p= ((plugInstStruct*)inst)->data;
+    gtk_label_set_text (p->label,l);
     g_free(l);    
 }
 

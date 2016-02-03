@@ -7,12 +7,12 @@ all: runz80 asm plugins
 runz80: main.c plugin.c
 	gcc $(CFLAGS) -o runz80 libz80/z80.c main.c plugin.c $(LIBS)
 
-asm: asm/test1.bin asm/test2.bin
+asm: asm/test1.bin asm/test2.bin asm/scratch.bin
 
 asm/%.bin: asm/%.asm
 	z88dk/bin/z80asm -l -b -o=$@ $<
 
-plugins: plugins/libsimpleOut.so
+plugins: plugins/libsimpleOut.so plugins/libsimpleIn.so
 
 plugins/%.so: plugSrc/%.c
 	gcc -o $@ -fPIC -shared $(CFLAGS) $< $(LIBS)

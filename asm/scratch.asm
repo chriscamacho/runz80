@@ -3,11 +3,14 @@
     out (0x2),a
     ld  a,0x34
     out (0x4),a
-    ld  a,0x56
-    out (0x6),a
-    ld a,0x78
-    out (0x9a),a
-    halt 
+
+
+loop:
+    in  a,(0x40)
+    out (0x06),a
+    cp  0x80
+    jr  nz, loop
+    halt
 dat:
     defb  0
 over:

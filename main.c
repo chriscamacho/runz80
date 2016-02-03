@@ -157,8 +157,25 @@ static void context_mem_write_callback(int param, ushort address, byte data)
 
 static byte context_io_read_callback(int param, ushort address)
 {
-    byte data = address >> 8;
-    printf("PR %04x %02x\n", address, data);
+    //byte data = address >> 8;
+    //printf("PR %04x %02x\n", address, data);
+    int data=0xff;
+    address = address & 0xff;
+    gboolean handled = FALSE;
+    for (GList* l = plugins; l != NULL; l = l->next) {
+        plugInstStruct* i = (plugInstStruct*)l->data;
+        int a = i->portStart;
+        int r = i->plug.getPortSize();
+        if (address>=a && address<a+r) {
+            // IO port in range
+            data = i->plug.getPort(i, a);
+            handled = TRUE;
+        }
+    }
+    if (!handled) {
+        g_print("warning port write not handled by a plugin (0x%02x)=0x%02x\n",address,data);
+    }
+    
     return data;
 }
 
@@ -168,7 +185,7 @@ static void context_io_write_callback(int param, ushort address, byte data)
     gboolean handled = FALSE;
     for (GList* l = plugins; l != NULL; l = l->next) {
         plugInstStruct* i = (plugInstStruct*)l->data;
-        int a =*(int*)i->data[0];
+        int a = i->portStart;
         int r = i->plug.getPortSize();
         if (address>=a && address<a+r) {
             // IO port in range
@@ -176,7 +193,6 @@ static void context_io_write_callback(int param, ushort address, byte data)
             handled = TRUE;
         }
     }
-//    printf("PW %04x %02x\n", address, data);
     if (!handled) {
         g_print("warning port write not handled by a plugin (0x%02x)=0x%02x\n",address,data);
     }
@@ -258,31 +274,43 @@ int main( int argc, char **argv ) {
 
 
 
-    // load in our single plugin
-    // with three instances
+    // load in our simple plugins
+    // with three instances and one instance of the other
     // in future this will come from a
     // "machine" config file
-    pluginStruct simplePlugin;
-    plugInstStruct pAdHi,pAdLo,pDat;
+    pluginStruct simplePlugin,inPlugin;
+    plugInstStruct pAdHi,pAdLo,pDat,pIn;
+
+    sprintf(inPlugin.libName,"simpleIn");
+    integratePlugin(&inPlugin);
+
+    pIn.plug=inPlugin;
+    namePluginInstance(&pIn,"input switches");
+    setPluginInstanceStartPort(&pIn,0x40);
+    pIn.plug.initialise(&pIn);
     
     sprintf(simplePlugin.libName,"simpleOut");
-    integratePlugin(&simplePlugin);
+    integratePlugin(&simplePlugin); // TODO integrate should take string name as well?
     
     pAdHi.plug=simplePlugin;
     namePluginInstance(&pAdHi,"Address HI");
-    pAdHi.plug.initialise(&pAdHi,0x02,0);
+    setPluginInstanceStartPort(&pAdHi,0x02);
+    pAdHi.plug.initialise(&pAdHi);
 
     pAdLo.plug=simplePlugin;
     namePluginInstance(&pAdLo,"Address LO");
-    pAdLo.plug.initialise(&pAdLo,0x04,0);
+    setPluginInstanceStartPort(&pAdLo,0x04);
+    pAdLo.plug.initialise(&pAdLo);
 
     pDat.plug=simplePlugin;
     namePluginInstance(&pDat,"Data");
-    pDat.plug.initialise(&pDat,0x06,0);
+    setPluginInstanceStartPort(&pDat,0x06);
+    pDat.plug.initialise(&pDat);
 
     plugins=g_list_append (plugins, &pAdHi);
     plugins=g_list_append (plugins, &pAdLo);
     plugins=g_list_append (plugins, &pDat);
+    plugins=g_list_append (plugins, &pIn);
 
 
     gtk_main ();

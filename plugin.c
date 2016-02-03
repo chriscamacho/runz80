@@ -65,6 +65,17 @@ void integratePlugin(pluginStruct *plugin)
     g_free(curr);
 }
 
+// you should use these rather than directly modifying the
+// struct in case other things need to happen at the same time
+// (things may/will change!)
 void namePluginInstance(plugInstStruct *plugInst, char* str) {
     snprintf(plugInst->name, 79, "%s", str);
+}
+
+void setPluginInstanceStartAddress(plugInstStruct *plugInst, int a) {
+    plugInst->addressStart = a;
+}
+
+void setPluginInstanceStartPort(plugInstStruct *plugInst, int p) {
+    plugInst->portStart = p;
 }

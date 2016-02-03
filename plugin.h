@@ -3,7 +3,7 @@
 
 typedef unsigned char byte;
 
-typedef void (* initialiseFunc) (void* pInst, int portStart, int addressStart);
+typedef void (* initialiseFunc) (void* pInst);
 typedef int (* getPortSizeFunc) ();
 typedef int (* getAddressSizeFunc) ();
 typedef byte (* getPortFunc) (void* pInst, int port);
@@ -26,8 +26,9 @@ typedef struct {
 typedef struct {
     pluginStruct plug;
     char name[80];
-    void** data;        // TODO should this be a pointer to user struct ??
-                        // TODO should addressStart and portStart be seperate
+    int portStart;      // the first port in the block of ports used by the plugin
+    int addressStart;   // the first address in the block of memory mapped to the plugin
+    void* data; 
 } plugInstStruct;
 
 
@@ -35,3 +36,5 @@ typedef struct {
 
 void integratePlugin(pluginStruct *plugin);
 void namePluginInstance(plugInstStruct *plugInst, char* str);
+void setPluginInstanceStartPort(plugInstStruct *plugInst, int p);
+void setPluginInstanceStartAddress(plugInstStruct *plugInst, int a);
