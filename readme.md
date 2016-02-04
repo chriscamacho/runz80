@@ -17,3 +17,42 @@ https://github.com/ggambetta/libz80
 extract z88dk to this directory
 clone libz80 to this directory
 
+
+example machine config
+
+The following config is using two plugins, simpleIn is used once, and simpleOut is used twice so the
+machine has three devices...
+
+the user specifies the first port for the device (the plugin knows how many ports it needs!)
+
+<machine name="machine1">
+    <plugin
+        libName="simpleIn"
+        label="input switches"
+        portStart="0x10" />
+
+    <plugin
+        libName="simpleOut"
+        label="input value"
+        portStart="0x12" />
+
+    <plugin
+        libName="simpleOut"
+        label="inverted value"
+        portStart="0x14" />
+</machine>
+
+having a "machine" like this you might use it with the following z80 code
+
+    org 0
+    
+loop:
+    in  a,(0x10)    # simpleIn plugin port
+    out (0x12),a    # simpleOut port
+    cp  0x80
+    jr  z, done
+    cpl             # invert
+    out (0x14),a    # the other simpleOut port
+    jr  loop
+done:
+    halt

@@ -13,6 +13,7 @@
 #include "plugin.h"
 
 #include <gtk/gtk.h>
+#include <expat.h>
 
 GtkWidget *mainwin, *runButton;
 GtkWidget *AFtext,*BCtext,*DEtext,*HLtext;
@@ -175,7 +176,7 @@ static byte context_io_read_callback(int param, ushort address)
     if (!handled) {
         g_print("warning port write not handled by a plugin (0x%02x)=0x%02x\n",address,data);
     }
-    
+
     return data;
 }
 
@@ -214,12 +215,12 @@ static void setValText(GtkEntry* ent, ushort val)
 
 static void dump_z80_state( void )
 {
-/*    
-    printf( "AF %04x BC %04x DE %04x HL %04x\nAF'%04x BC'%04x DE'%04x HL'%04x IX%04x IY%04x SP%04x PC%04x\n",
-            AF1, BC1, DE1, HL1, AF2, BC2, DE2, HL2, IX, IY, SP, PC );
-    printf( "I%02x R%02x IFF1%d IFF2%d IM%d halted %d tstates %d\n", I, R,
-            IFF1, IFF2, IM, context.halted, context.tstates );
-*/
+    /*
+        printf( "AF %04x BC %04x DE %04x HL %04x\nAF'%04x BC'%04x DE'%04x HL'%04x IX%04x IY%04x SP%04x PC%04x\n",
+                AF1, BC1, DE1, HL1, AF2, BC2, DE2, HL2, IX, IY, SP, PC );
+        printf( "I%02x R%02x IFF1%d IFF2%d IM%d halted %d tstates %d\n", I, R,
+                IFF1, IFF2, IM, context.halted, context.tstates );
+    */
     setValText((GtkEntry*)AFtext, AF1);
     setValText((GtkEntry*)BCtext, BC1);
     setValText((GtkEntry*)DEtext, DE1);
@@ -233,11 +234,61 @@ static void dump_z80_state( void )
     on_addressChange(NULL,NULL);
 }
 
+// cache loaded plugin libraries
+GHashTable* pluglookup;
+
+// during xml attribute iteration each of these are filled in
+// ready for the end of the element callback
+char label[1024];
+pluginStruct* plug;
+int portStart;
+
+void startElement(void *data, const char *el, const char **attr) {
+    int i;
+
+    for (i = 0; attr[i]; i += 2) {
+        if (g_strcmp0(attr[i],"libName")==0) {
+            plug = (pluginStruct*)g_hash_table_lookup (pluglookup, attr[i + 1]);
+            //g_print("\nplug %s - %lu\n",attr[i+1],plug);
+            if (plug==NULL) {
+                plug = malloc(sizeof(pluginStruct));
+                sprintf(plug->libName,(const char*)attr[i + 1]);
+                integratePlugin(plug);
+                //g_print("integrated %s\n",attr[i + 1]);
+                g_hash_table_insert (pluglookup, (gpointer)attr[i + 1],plug);
+            }
+        }
+        if (g_strcmp0(attr[i],"label")==0) {
+            sprintf(label,(const char*)attr[i + 1]);
+        }
+        if (g_strcmp0(attr[i],"portStart")==0) {
+            portStart = (int)strtol((const char*)attr[i + 1], NULL, 16);
+        }
+    }
+}
+
+
+
+void endElement(void *data, const char *el)
+{
+    if (plug!=NULL) {
+        plugInstStruct*  pInst = malloc(sizeof(plugInstStruct));
+        pInst->plug=*plug;
+        namePluginInstance(pInst,label);
+        setPluginInstanceStartPort(pInst,portStart);
+        pInst->plug.initialise(pInst);
+
+        plugins=g_list_append (plugins, pInst);
+
+        plug=NULL;
+    }
+
+}
 
 
 int main( int argc, char **argv ) {
 
-    
+
     for (int i=0; i<0x10000; i++) {
         memory[i] = 0;
     }
@@ -245,7 +296,7 @@ int main( int argc, char **argv ) {
 
     GtkBuilder *gtkBuilder;
 
-   
+
     gtk_init (&argc, &argv);
 
     gtkBuilder= gtk_builder_new();
@@ -273,48 +324,76 @@ int main( int argc, char **argv ) {
     gtk_widget_show_all ( mainwin );
 
 
+    pluglookup = g_hash_table_new ( g_str_hash , g_str_equal);
+
+    g_print("requested machine config=%s\n",argv[1]);
+    char buf[BUFSIZ];
+    FILE *file = fopen(argv[1], "r" );
+    if (file!=NULL) {
+        XML_Parser parser = XML_ParserCreate(NULL);
+        int done;
+        int depth = 0;
+        XML_SetUserData(parser, &depth);
+        XML_SetElementHandler(parser, startElement, endElement);
+        do {
+            //size_t len = fread(buf, 1, sizeof(buf), stdin);
+            size_t len = fread(buf, 1, sizeof(buf), file);
+            done = len < sizeof(buf);
+            if (!XML_Parse(parser, buf, len, done)) {
+                fprintf(stderr,
+                        "%s at line %d\n",
+                        XML_ErrorString(XML_GetErrorCode(parser)),
+                        XML_GetCurrentLineNumber(parser));
+                return 1;
+            }
+        } while (!done);
+        XML_ParserFree(parser);
+    }
+
+
 
     // load in our simple plugins
     // with three instances and one instance of the other
     // in future this will come from a
     // "machine" config file
-    pluginStruct simplePlugin,inPlugin;
-    plugInstStruct pAdHi,pAdLo,pDat,pIn;
+    /*
+        pluginStruct simplePlugin,inPlugin;
+        plugInstStruct pAdHi,pAdLo,pDat,pIn;
 
-    sprintf(inPlugin.libName,"simpleIn");
-    integratePlugin(&inPlugin);
+        sprintf(inPlugin.libName,"simpleIn");
+        integratePlugin(&inPlugin);
 
-    pIn.plug=inPlugin;
-    namePluginInstance(&pIn,"input switches");
-    setPluginInstanceStartPort(&pIn,0x40);
-    pIn.plug.initialise(&pIn);
-    
-    sprintf(simplePlugin.libName,"simpleOut");
-    integratePlugin(&simplePlugin); // TODO integrate should take string name as well?
-    
-    pAdHi.plug=simplePlugin;
-    namePluginInstance(&pAdHi,"Address HI");
-    setPluginInstanceStartPort(&pAdHi,0x02);
-    pAdHi.plug.initialise(&pAdHi);
+        pIn.plug=inPlugin;
+        namePluginInstance(&pIn,"input switches");
+        setPluginInstanceStartPort(&pIn,0x40);
+        pIn.plug.initialise(&pIn);
 
-    pAdLo.plug=simplePlugin;
-    namePluginInstance(&pAdLo,"Address LO");
-    setPluginInstanceStartPort(&pAdLo,0x04);
-    pAdLo.plug.initialise(&pAdLo);
+        sprintf(simplePlugin.libName,"simpleOut");
+        integratePlugin(&simplePlugin); // TODO integrate should take string name as well?
 
-    pDat.plug=simplePlugin;
-    namePluginInstance(&pDat,"Data");
-    setPluginInstanceStartPort(&pDat,0x06);
-    pDat.plug.initialise(&pDat);
+        pAdHi.plug=simplePlugin;
+        namePluginInstance(&pAdHi,"Address HI");
+        setPluginInstanceStartPort(&pAdHi,0x02);
+        pAdHi.plug.initialise(&pAdHi);
 
-    plugins=g_list_append (plugins, &pAdHi);
-    plugins=g_list_append (plugins, &pAdLo);
-    plugins=g_list_append (plugins, &pDat);
-    plugins=g_list_append (plugins, &pIn);
+        pAdLo.plug=simplePlugin;
+        namePluginInstance(&pAdLo,"Address LO");
+        setPluginInstanceStartPort(&pAdLo,0x04);
+        pAdLo.plug.initialise(&pAdLo);
 
+        pDat.plug=simplePlugin;
+        namePluginInstance(&pDat,"Data");
+        setPluginInstanceStartPort(&pDat,0x06);
+        pDat.plug.initialise(&pDat);
 
+        plugins=g_list_append (plugins, &pAdHi);
+        plugins=g_list_append (plugins, &pAdLo);
+        plugins=g_list_append (plugins, &pDat);
+        plugins=g_list_append (plugins, &pIn);
+
+    */
     gtk_main ();
 
-    
+
     return 0;
 }

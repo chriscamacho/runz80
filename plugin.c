@@ -7,16 +7,16 @@
 void integratePlugin(pluginStruct *plugin)
 {
     gchar *module_path = NULL, *curr = NULL, *plug = NULL;
-    
+
 
     if(g_module_supported() == FALSE) {
-            g_error("Modules not supported :(");
-            exit(-1);
+        g_error("Modules not supported :(");
+        exit(-1);
     }
-    
+
     curr = g_get_current_dir();
     plug = g_strdup_printf ("%s/plugins", curr);
-    
+
     module_path = g_module_build_path((const gchar *) plug , plugin->libName);
 
     g_print("Module path: %s\n", module_path);
@@ -41,7 +41,7 @@ void integratePlugin(pluginStruct *plugin)
     if (!g_module_symbol (plugin->module, "getAddressSize", (gpointer *)&plugin->getAddressSize)) {
         g_print("couldn't get getAddressSize function pointer\n");
         exit(-1);
-    }      
+    }
     if (!g_module_symbol (plugin->module, "getPort", (gpointer *)&plugin->getPort)) {
         g_print("couldn't get getPort function pointer\n");
         exit(-1);

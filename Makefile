@@ -1,6 +1,6 @@
 
-LIBS = `pkg-config --libs gtk+-3.0 gmodule-2.0` -ldl
-CFLAGS = -g `pkg-config --cflags gtk+-3.0 gmodule-2.0` -rdynamic -std=c99
+LIBS = `pkg-config --libs expat gtk+-3.0 gmodule-2.0` -ldl
+CFLAGS = -g `pkg-config --cflags expat gtk+-3.0 gmodule-2.0` -rdynamic -std=c99
 
 all: runz80 asm plugins
 

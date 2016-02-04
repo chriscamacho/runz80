@@ -1,0 +1,17 @@
+
+<machine name="machine1">
+    <plugin
+        libName="simpleIn"
+        label="input switches"
+        portStart="0x10" />
+
+    <plugin
+        libName="simpleOut"
+        label="input value"
+        portStart="0x12" />
+
+    <plugin
+        libName="simpleOut"
+        label="inverted value"
+        portStart="0x14" />
+</machine>
