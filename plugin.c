@@ -58,7 +58,10 @@ void integratePlugin(pluginStruct *plugin)
         g_print("couldn't get setAddress function pointer\n");
         exit(-1);
     }
-
+    if (!g_module_symbol (plugin->module, "focusUI", (gpointer *)&plugin->focusUI)) {
+        g_print("couldn't get focusUI function pointer\n");
+        exit(-1);
+    }
 
     g_free(module_path);
     g_free(plug);

@@ -5,6 +5,7 @@
   <object class="GtkWindow" id="mainWindow">
     <property name="can_focus">False</property>
     <signal name="destroy" handler="close_app" swapped="no"/>
+    <signal name="focus-in-event" handler="on_mainWindow_focus" swapped="no"/>
     <child>
       <object class="GtkBox" id="box1">
         <property name="visible">True</property>

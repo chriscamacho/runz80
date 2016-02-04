@@ -10,6 +10,7 @@ typedef byte (* getPortFunc) (void* pInst, int port);
 typedef void (* setPortFunc) (void* pInst, int port, byte val);
 typedef byte (* getAddressFunc) (void* pInst, int address);
 typedef void (* setAddressFunc) (void* pInst, int address, byte data);
+typedef void (* focusUiFunc) (void* pInst);
 
 typedef struct {
     GModule *module;
@@ -21,6 +22,7 @@ typedef struct {
     setPortFunc setPort;
     getAddressFunc getAddress;
     setAddressFunc setAddress;
+    focusUiFunc focusUI;
 } pluginStruct;
 
 typedef struct {

@@ -30,6 +30,32 @@ gboolean running = FALSE;
 GList *plugins;
 guint idle_id;      // thread idle id
 
+gboolean inhibitFocus=FALSE;
+
+gboolean on_mainWindow_focus(GtkWidget *widget, GdkEvent  *event, gpointer   user_data)
+{
+    g_print("focus ");
+
+    // not quite working as expected / wanted!
+    if (inhibitFocus) { // the focus event needs to refocus the window...
+        g_print("inhibited\n");
+        inhibitFocus=FALSE;
+        return TRUE;
+    }
+    g_print("\n");
+
+    for (GList* l = plugins; l != NULL; l = l->next) {
+        plugInstStruct* i = (plugInstStruct*)l->data;
+        i->plug.focusUI(i);
+    }
+
+    inhibitFocus = TRUE;
+    gtk_window_present ((GtkWindow*)mainwin);
+    return TRUE;
+}
+
+
+
 void close_app(GtkWidget* widget,gpointer user_data)
 {
     gtk_main_quit();
@@ -153,13 +179,23 @@ static byte context_mem_read_callback(int param, ushort address)
 
 static void context_mem_write_callback(int param, ushort address, byte data)
 {
+    
     memory[address] = data;
+
+    for (GList* l = plugins; l != NULL; l = l->next) {
+        plugInstStruct* i = (plugInstStruct*)l->data;
+        int a = i->addressStart;
+        int r = i->plug.getAddressSize();
+        if (address>=a && address<(a+r)) {
+            // address in range
+            i->plug.setAddress(i, address, data);
+
+        }
+    }
 }
 
 static byte context_io_read_callback(int param, ushort address)
 {
-    //byte data = address >> 8;
-    //printf("PR %04x %02x\n", address, data);
     int data=0xff;
     address = address & 0xff;
     gboolean handled = FALSE;
@@ -169,7 +205,7 @@ static byte context_io_read_callback(int param, ushort address)
         int r = i->plug.getPortSize();
         if (address>=a && address<a+r) {
             // IO port in range
-            data = i->plug.getPort(i, a);
+            data = i->plug.getPort(i, address);
             handled = TRUE;
         }
     }
@@ -190,7 +226,7 @@ static void context_io_write_callback(int param, ushort address, byte data)
         int r = i->plug.getPortSize();
         if (address>=a && address<a+r) {
             // IO port in range
-            i->plug.setPort(i, a, data);
+            i->plug.setPort(i, address, data);
             handled = TRUE;
         }
     }
@@ -241,7 +277,7 @@ GHashTable* pluglookup;
 // ready for the end of the element callback
 char label[1024];
 pluginStruct* plug;
-int portStart;
+int portStart,addressStart;
 
 void startElement(void *data, const char *el, const char **attr) {
     int i;
@@ -264,6 +300,9 @@ void startElement(void *data, const char *el, const char **attr) {
         if (g_strcmp0(attr[i],"portStart")==0) {
             portStart = (int)strtol((const char*)attr[i + 1], NULL, 16);
         }
+        if (g_strcmp0(attr[i],"addressStart")==0) {
+            addressStart = (int)strtol((const char*)attr[i + 1], NULL, 16);
+        }
     }
 }
 
@@ -276,11 +315,14 @@ void endElement(void *data, const char *el)
         pInst->plug=*plug;
         namePluginInstance(pInst,label);
         setPluginInstanceStartPort(pInst,portStart);
+        setPluginInstanceStartAddress(pInst,addressStart);
         pInst->plug.initialise(pInst);
 
         plugins=g_list_append (plugins, pInst);
-
+        sprintf(label,"\0");
         plug=NULL;
+        portStart=0;
+        addressStart=0;
     }
 
 }
@@ -351,47 +393,6 @@ int main( int argc, char **argv ) {
     }
 
 
-
-    // load in our simple plugins
-    // with three instances and one instance of the other
-    // in future this will come from a
-    // "machine" config file
-    /*
-        pluginStruct simplePlugin,inPlugin;
-        plugInstStruct pAdHi,pAdLo,pDat,pIn;
-
-        sprintf(inPlugin.libName,"simpleIn");
-        integratePlugin(&inPlugin);
-
-        pIn.plug=inPlugin;
-        namePluginInstance(&pIn,"input switches");
-        setPluginInstanceStartPort(&pIn,0x40);
-        pIn.plug.initialise(&pIn);
-
-        sprintf(simplePlugin.libName,"simpleOut");
-        integratePlugin(&simplePlugin); // TODO integrate should take string name as well?
-
-        pAdHi.plug=simplePlugin;
-        namePluginInstance(&pAdHi,"Address HI");
-        setPluginInstanceStartPort(&pAdHi,0x02);
-        pAdHi.plug.initialise(&pAdHi);
-
-        pAdLo.plug=simplePlugin;
-        namePluginInstance(&pAdLo,"Address LO");
-        setPluginInstanceStartPort(&pAdLo,0x04);
-        pAdLo.plug.initialise(&pAdLo);
-
-        pDat.plug=simplePlugin;
-        namePluginInstance(&pDat,"Data");
-        setPluginInstanceStartPort(&pDat,0x06);
-        pDat.plug.initialise(&pDat);
-
-        plugins=g_list_append (plugins, &pAdHi);
-        plugins=g_list_append (plugins, &pAdLo);
-        plugins=g_list_append (plugins, &pDat);
-        plugins=g_list_append (plugins, &pIn);
-
-    */
     gtk_main ();
 
 

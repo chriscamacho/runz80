@@ -47,3 +47,9 @@ G_MODULE_EXPORT void setPort(void* inst, int port, byte val) {
 
 G_MODULE_EXPORT byte getAddress(void* inst, int address) { return 0xff; }
 G_MODULE_EXPORT void setAddress(void* inst, int address, byte data) {  }
+
+G_MODULE_EXPORT void focusUI(void* inst) {
+    plugInstStruct* pl = (plugInstStruct*)inst;
+    simpleOutVars* vars = ((simpleOutVars*)pl->data);
+    gtk_window_present (vars->window);
+}
