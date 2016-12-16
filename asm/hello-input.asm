@@ -1,50 +1,80 @@
     org 0
     
-    ld      sp,0x8000
+    ld      sp,0x8000       
 
 loop:
-    ld      hl,(mptr)
-    ld      a,(hl)
+    ld      hl,(mptr)       
+    ld      a,(hl)          ; get the next character of message
     cp      0
-    jr      z,hellodone
+    jr      z,hellodone     ; 0 is end of string
     
-    ld      hl,(mptr)
     inc     hl
-    ld      (mptr),hl
+    ld      (mptr),hl       ; increment and store the message pointer
 
-    ld      hl,(cursor)
-    sub     32
+    ld      hl,(cursor)     ; where on screen we're printing
+    sub     32              ; character data starts at 32 (space)
     
-    call    drawchar
+    call    drawchar        ; draw character A at HL
 
-    ld      hl,(cursor)
-    inc     hl
-    ld      (cursor),hl
+    inc     hl              ; move the cursor to right
+    ld      (cursor),hl     
 
     jr      loop
 
 hellodone:
     ld      hl,0x4182
-    ld      (cursor),hl ; reset hello world position
+    ld      (cursor),hl     ; reset screen position
     ld      hl,message
-    ld      (mptr),hl   ; reset message pointer
+    ld      (mptr),hl       ; reset message pointer
 
-    ld      hl,(curoff)
+    ld      hl,(curoff)     ; cursor offset 
     ld      bc,0x10
     add     hl,bc           ; add 16 (1 line) to hl
 
     ld      a,l
-    cp      0x90            ; 9th line
+    cp      0x90            ; less than 9th line
     jr      nz,offok
-    ld      hl,0x0000
+    ld      hl,0x0000       ; reset the offset
 offok:
     ld      (curoff),hl
     ld      bc,(cursor)
     add     hl,bc
-    ld      (cursor),hl
+    ld      (cursor),hl     ; add the offset to the cursor
 
 
-; clear buffer
+    in      a,(0x10)        ; get the switch positions
+    and     0x0f            ; mask lower 4 bits
+
+    cp      10              ; less than 10 (0-9)
+    jr      c,gtnd
+    add     7               ; skip to A-F
+gtnd:
+    add     16              ; 0 is char 16
+
+    ld      hl,0x4001       ; least significant nibble position
+    call    drawchar
+
+
+    in      a,(0x10)
+    and     0xf0            ; clear c
+    rr      a
+    rr      a
+    rr      a               ; get the switch positions, mask and
+    rr      a               ; rotate into lower nibble
+
+    cp      10
+    jr      c,gtnt
+    add     7
+gtnt:
+    add     16
+
+    ld      hl,0x4000
+    call    drawchar
+
+    out     (0x20),a        ; any value to port 0x20 tells "screen" to refresh        
+
+
+                            ; clear buffer
     
     ld      hl,0x4000       ; HL = start address of block
 
@@ -57,44 +87,11 @@ offok:
     ldir                    ; fill memory
 
 
-    in      a,(0x10)
-    and     0x0f
-
-    cp      10
-    jr      c,gtnd
-    add     7
-gtnd:
-    add     16
-
-    ld      hl,0x4001
-    call    drawchar
-
-
-    in      a,(0x10)
-    and     0xf0
-    rr      a
-    rr      a
-    rr      a
-    rr      a
-
-    cp      10
-    jr      c,gtnt
-    add     7
-gtnt:
-    add     16
-
-    ld      hl,0x4000
-    call    drawchar
-
-        
-
-    jp      loop    ; :-o outside JR range !!!
+    jp      loop            ; :o outside JR range !!!
     
 
 
-done:
-    out     (0x20),a    ; any value to port 0x20
-    halt
+
 
 mptr:
     defw    message
@@ -102,33 +99,33 @@ message:
     defb    "Hello World!",0
 cursor:
     defw    0x4182
-curoff:                 ; cursor offset
-    defw    0x0,0x0,0x0
+curoff:                     ; cursor offset
+    defw    0x0
 
-drawchar:       ; a = char hl=screen address
+drawchar:                   ; a = char hl=screen address
     push    hl
 
-    ld      d,0     ; de = font address
+    ld      d,0             ; de = font address
     ld      e,a
 
-    and     a       ; clear carry
+    and     a               ; clear carry
     rl      e
     rl      d       ; *2
     rl      e
-    rl      d       ; *2
+    rl      d       ; *2 (*4)
     rl      e
-    rl      d       ; *2
+    rl      d       ; *2 (*8)
 
-    ld      hl,font
+    ld      hl,font         ; add base font address
     add     hl,de
 
-    push    hl      ; load
-    pop     de      ; de with hl
+    push    hl              ; load
+    pop     de              ; de with hl
     pop     hl
-    push    hl      ; restore hl in reg and stack
+    push    hl              ; restore hl in reg and stack
 
-    ld      bc,0x10
-charloop:
+    ld      bc,0x10         ; 16 bytes per line
+charloop:                   ; unrolled loop
     ld      a,(de)
     ld      (hl),a
     inc     de
@@ -167,7 +164,7 @@ charloop:
     ld      a,(de)
     ld      (hl),a
 
-    pop     hl
+    pop     hl              ; restore HL
     ret
 
 include "asm/font.asm"

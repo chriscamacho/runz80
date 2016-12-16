@@ -38,7 +38,7 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
 
     cairo_fill (cr);
 
-gtk_widget_queue_draw (widget);
+//gtk_widget_queue_draw (widget);
 
     return FALSE;
 }
