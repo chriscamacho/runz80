@@ -38,6 +38,8 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
 
     cairo_fill (cr);
 
+gtk_widget_queue_draw (widget);
+
     return FALSE;
 }
 
@@ -49,6 +51,10 @@ G_MODULE_EXPORT void initialise(void* inst) {
 // the plugins GUI
     kBufferVars* vars = ((kBufferVars*)pl->data);
     vars->buffer = malloc(1024);
+
+    char* p = vars->buffer;
+    for (int i=0;i<1024;i++) p[i]=0;
+    
     vars->window = (GtkWindow*)gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_deletable (vars->window, FALSE);
 

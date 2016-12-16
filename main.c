@@ -115,6 +115,8 @@ gboolean on_idle( gpointer data )
         running = TRUE;
         on_run(NULL, NULL);
     }
+
+
 //    gdk_threads_leave();
     return( TRUE );
 }
