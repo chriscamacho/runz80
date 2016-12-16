@@ -18,6 +18,14 @@ extract z88dk to this directory
 clone libz80 to this directory
 
 
+./runz80 machine1.xml
+
+will load a machine that will allow you to run hello-input.bin
+
+You should see Hello World! scrolling down the screen if you change the
+value of the 8 bit switches, the hex value is displayed in the top
+left of the display
+
 example machine config
 
 The following config is using two plugins, simpleIn is used once, and simpleOut is used twice so the
