@@ -110,7 +110,7 @@ gboolean on_idle( gpointer data )
 //    gdk_threads_enter();  // TODO ...and I'm supposed to do what instead
     if(!context.halted && running==TRUE) {
         Z80Execute(&context);
-        dump_z80_state();
+        //dump_z80_state();
     } else {
         running = TRUE;
         on_run(NULL, NULL);

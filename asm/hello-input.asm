@@ -74,8 +74,18 @@ gtnt:
     out     (0x20),a        ; any value to port 0x20 tells "screen" to refresh        
 
 
-                            ; clear buffer
-    
+
+    ld      de,0x1000
+delayLoop:
+    nop
+    dec     de
+    ld      a,d
+    or      e
+    jp      nz,delayLoop
+
+
+
+                            ; clear buffer    
     ld      hl,0x4000       ; HL = start address of block
 
     ld      e,l
