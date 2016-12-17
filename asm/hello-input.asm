@@ -42,6 +42,14 @@ offok:
     ld      (cursor),hl     ; add the offset to the cursor
 
 
+
+    in      a,(0x10)        ; show something on the two simple outputs
+    out     (0x12),a
+    xor     0xff
+    out     (0x14),a
+
+
+
     in      a,(0x10)        ; get the switch positions
     and     0x0f            ; mask lower 4 bits
 
@@ -51,7 +59,7 @@ offok:
 gtnd:
     add     16              ; 0 is char 16
 
-    ld      hl,0x4001       ; least significant nibble position
+    ld      hl,0x4088       ; least significant nibble position
     call    drawchar
 
 
@@ -68,7 +76,7 @@ gtnd:
 gtnt:
     add     16
 
-    ld      hl,0x4000
+    ld      hl,0x4087
     call    drawchar
 
     out     (0x20),a        ; any value to port 0x20 tells "screen" to refresh        

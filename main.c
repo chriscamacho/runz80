@@ -34,15 +34,15 @@ gboolean inhibitFocus=FALSE;
 
 gboolean on_mainWindow_focus(GtkWidget *widget, GdkEvent  *event, gpointer   user_data)
 {
-    g_print("focus ");
+    //g_print("focus ");
 
     // not quite working as expected / wanted!
     if (inhibitFocus) { // the focus event needs to refocus the window...
-        g_print("inhibited\n");
+        //g_print("inhibited\n");
         inhibitFocus=FALSE;
         return TRUE;
     }
-    g_print("\n");
+    //g_print("\n");
 
     for (GList* l = plugins; l != NULL; l = l->next) {
         plugInstStruct* i = (plugInstStruct*)l->data;
