@@ -17,6 +17,7 @@ https://github.com/ggambetta/libz80
 extract z88dk to this directory
 clone libz80 to this directory
 
+![example virtual machine](runz80.png)
 
 ./runz80 machine1.xml
 
