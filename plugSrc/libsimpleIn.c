@@ -4,7 +4,8 @@
 #include <gtk/gtk.h>
 
 typedef struct {
-    GtkWidget* window;
+    GtkWidget* parent;
+    GtkWidget* frame;
     GtkWidget* label;
     GtkWidget* switch8;
     GtkWidget* switch7;
@@ -17,7 +18,7 @@ typedef struct {
 } simpleInVars;
 
 
-G_MODULE_EXPORT void initialise(void* inst) {
+G_MODULE_EXPORT void initialise(void* inst, GtkWidget* parent) {
 
     plugInstStruct* pl = (plugInstStruct*)inst;
 
@@ -28,8 +29,8 @@ G_MODULE_EXPORT void initialise(void* inst) {
 
     GtkBuilder* gtkBuilder = gtk_builder_new();
     gtk_builder_add_from_file(gtkBuilder,"plugins/simpleIN.glade",NULL);
-    vars->window = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"window1"));
-    gtk_window_set_deletable ((GtkWindow*)vars->window, FALSE);
+    vars->frame = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"mainFrame"));
+    vars->parent = parent;
     vars->label = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"portLabel"));
     vars->switch8 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"switch8")); // hi bit
     vars->switch7 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"switch7"));
@@ -39,12 +40,20 @@ G_MODULE_EXPORT void initialise(void* inst) {
     vars->switch3 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"switch3"));
     vars->switch2 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"switch2"));
     vars->switch1 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"switch1"));
-    g_object_unref ( G_OBJECT(gtkBuilder) );
+
+
+    // seems I can't load a fragment of a UI unless its in a top level container ??
+    GtkWidget* bogus = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"arrgh"));
+    gtk_container_remove (GTK_CONTAINER(bogus),vars->frame);
 
     gchar* l = g_strdup_printf ("Port %s @ 0x%02x",(const gchar *)&pl->name,pl->portStart); 
     gtk_label_set_text ((GtkLabel*)vars->label,l);
     g_free(l);
-    gtk_widget_show_all ( vars->window );
+
+    gtk_container_add (GTK_CONTAINER (vars->parent), vars->frame);
+
+    // can't unref until frame is reparented...
+    g_object_unref ( G_OBJECT(gtkBuilder) );
 }
 
 G_MODULE_EXPORT int getPortSize() { return 1; }
@@ -72,9 +81,5 @@ G_MODULE_EXPORT void setPort(void* inst, int port, byte val) {
 G_MODULE_EXPORT byte getAddress(void* inst, int address) { return 0xff; }
 G_MODULE_EXPORT void setAddress(void* inst, int address, byte data) {  }
 
-G_MODULE_EXPORT void focusUI(void* inst) {
-    plugInstStruct* pl = (plugInstStruct*)inst;
-    simpleInVars* vars = ((simpleInVars*)pl->data);
-    gtk_window_present ((GtkWindow*)vars->window);
-}
+
 

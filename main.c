@@ -19,6 +19,7 @@ GtkWidget *mainwin, *runButton;
 GtkWidget *AFtext,*BCtext,*DEtext,*HLtext;
 GtkWidget *IXtext,*IYtext,*SPtext,*PCtext;
 GtkWidget *addressInput,*memCont1,*memCont2;
+GtkWidget *pluginPanel;
 
 /* 64Kb of RAM */
 static byte memory[ 0x10000 ];
@@ -34,23 +35,7 @@ gboolean inhibitFocus=FALSE;
 
 gboolean on_mainWindow_focus(GtkWidget *widget, GdkEvent  *event, gpointer   user_data)
 {
-    //g_print("focus ");
-
-    // not quite working as expected / wanted!
-    if (inhibitFocus) { // the focus event needs to refocus the window...
-        //g_print("inhibited\n");
-        inhibitFocus=FALSE;
-        return TRUE;
-    }
-    //g_print("\n");
-
-    for (GList* l = plugins; l != NULL; l = l->next) {
-        plugInstStruct* i = (plugInstStruct*)l->data;
-        i->plug.focusUI(i);
-    }
-
-    inhibitFocus = TRUE;
-    gtk_window_present ((GtkWindow*)mainwin);
+    /* lot easier now all in one window...*/
     return TRUE;
 }
 
@@ -155,7 +140,6 @@ void on_load(GtkWidget* widget,gpointer user_data)
         char *filename;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
         filename = gtk_file_chooser_get_filename (chooser);
-        //open_file (filename);
         FILE *file = fopen( filename, "r" );
         if ( file == 0 ) {
             printf( "Could not open file\n" );
@@ -318,7 +302,7 @@ void endElement(void *data, const char *el)
         namePluginInstance(pInst,label);
         setPluginInstanceStartPort(pInst,portStart);
         setPluginInstanceStartAddress(pInst,addressStart);
-        pInst->plug.initialise(pInst);
+        pInst->plug.initialise(pInst,pluginPanel);
 
         plugins=g_list_append (plugins, pInst);
         sprintf(label,"\0");
@@ -332,14 +316,12 @@ void endElement(void *data, const char *el)
 
 int main( int argc, char **argv ) {
 
-
     for (int i=0; i<0x10000; i++) {
         memory[i] = 0;
     }
     init_emulator();
 
     GtkBuilder *gtkBuilder;
-
 
     gtk_init (&argc, &argv);
 
@@ -364,6 +346,8 @@ int main( int argc, char **argv ) {
     memCont1 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"memCont1"));
     memCont2 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"memCont2"));
 
+    pluginPanel = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"pluginPanel"));
+    
     g_object_unref ( G_OBJECT(gtkBuilder) );
     gtk_widget_show_all ( mainwin );
 
@@ -380,7 +364,6 @@ int main( int argc, char **argv ) {
         XML_SetUserData(parser, &depth);
         XML_SetElementHandler(parser, startElement, endElement);
         do {
-            //size_t len = fread(buf, 1, sizeof(buf), stdin);
             size_t len = fread(buf, 1, sizeof(buf), file);
             done = len < sizeof(buf);
             if (!XML_Parse(parser, buf, len, done)) {
@@ -394,7 +377,7 @@ int main( int argc, char **argv ) {
         XML_ParserFree(parser);
     }
 
-
+    gtk_widget_show_all ( (GtkWidget*)mainwin );
     gtk_main ();
 
 

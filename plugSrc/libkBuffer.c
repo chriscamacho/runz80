@@ -9,7 +9,7 @@
 // a 1KB framebuffer graphics device (monochrome! oh the humanity :o ) 128x64px
 
 typedef struct {
-    GtkWindow* window;
+    GtkWidget* parent;
     GtkWidget *drawing_area;
     byte* buffer;
 } kBufferVars;
@@ -38,12 +38,12 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
 
     cairo_fill (cr);
 
-//gtk_widget_queue_draw (widget);
+
 
     return FALSE;
 }
 
-G_MODULE_EXPORT void initialise(void* inst) {
+G_MODULE_EXPORT void initialise(void* inst, GtkWidget* parent) {
 
     plugInstStruct* pl = (plugInstStruct*)inst;
 
@@ -55,19 +55,16 @@ G_MODULE_EXPORT void initialise(void* inst) {
     char* p = vars->buffer;
     for (int i=0;i<1024;i++) p[i]=0;
     
-    vars->window = (GtkWindow*)gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_deletable (vars->window, FALSE);
+    vars->parent = parent;
 
     vars->drawing_area = gtk_drawing_area_new ();
     gtk_widget_set_size_request (vars->drawing_area, 512, 256);
 
-    gtk_container_add (GTK_CONTAINER (vars->window), vars->drawing_area);
-
+    gtk_container_add ( (GtkContainer*)vars->parent, vars->drawing_area);
+                     
     g_signal_connect (G_OBJECT (vars->drawing_area), "draw",
                     G_CALLBACK (draw_callback), vars);
                     
-    gtk_widget_show_all ( (GtkWidget*)vars->window );
-
 }
 
 G_MODULE_EXPORT int getPortSize() { return 1; }
@@ -89,11 +86,5 @@ G_MODULE_EXPORT void setAddress(void* inst, int address, byte data) {
     a = a & 1023;
     vars->buffer[a]=data;
     
-
 }
 
-G_MODULE_EXPORT void focusUI(void* inst) {
-    plugInstStruct* pl = (plugInstStruct*)inst;
-    kBufferVars* vars = ((kBufferVars*)pl->data);
-    gtk_window_present (vars->window);
-}

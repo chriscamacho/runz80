@@ -4,12 +4,12 @@
 #include <gtk/gtk.h>
 
 typedef struct {
-    GtkWindow* window;
+    GtkWidget* parent;
     GtkLabel* label;
 } simpleOutVars;
 
 
-G_MODULE_EXPORT void initialise(void* inst) {
+G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent) {
 
     plugInstStruct* pl = (plugInstStruct*)inst;
 
@@ -17,20 +17,14 @@ G_MODULE_EXPORT void initialise(void* inst) {
 
 // the plugins GUI
     simpleOutVars* vars = ((simpleOutVars*)pl->data);
-    vars->window = (GtkWindow*)gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_deletable (vars->window, FALSE);
-
-
+    vars->parent = parent;
     vars->label = (GtkLabel*)gtk_label_new ("");
-
 
     gchar* l = g_strdup_printf ("Port %s = 0x%02x",(const gchar *)&pl->name,0); 
     gtk_label_set_text (vars->label,l);
     g_free(l);
     
-    gtk_container_add (GTK_CONTAINER (vars->window), (GtkWidget*)vars->label);
-    gtk_widget_show_all ( (GtkWidget*)vars->window );
-
+    gtk_container_add (GTK_CONTAINER (vars->parent), (GtkWidget*)vars->label);
 }
 
 G_MODULE_EXPORT int getPortSize() { return 1; }
@@ -48,8 +42,4 @@ G_MODULE_EXPORT void setPort(void* inst, int port, byte val) {
 G_MODULE_EXPORT byte getAddress(void* inst, int address) { return 0xff; }
 G_MODULE_EXPORT void setAddress(void* inst, int address, byte data) {  }
 
-G_MODULE_EXPORT void focusUI(void* inst) {
-    plugInstStruct* pl = (plugInstStruct*)inst;
-    simpleOutVars* vars = ((simpleOutVars*)pl->data);
-    gtk_window_present (vars->window);
-}
+

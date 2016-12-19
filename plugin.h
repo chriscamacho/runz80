@@ -1,16 +1,17 @@
 #include <glib.h>
 #include <gmodule.h>
+#include <gtk/gtk.h>
 
 typedef unsigned char byte;
 
-typedef void (* initialiseFunc) (void* pInst);
+typedef void (* initialiseFunc) (void* pInst, GtkWidget* parent);
 typedef int (* getPortSizeFunc) ();
 typedef int (* getAddressSizeFunc) ();
 typedef byte (* getPortFunc) (void* pInst, int port);
 typedef void (* setPortFunc) (void* pInst, int port, byte val);
 typedef byte (* getAddressFunc) (void* pInst, int address);
 typedef void (* setAddressFunc) (void* pInst, int address, byte data);
-typedef void (* focusUiFunc) (void* pInst);
+//typedef void (* focusUiFunc) (void* pInst);
 
 typedef struct {
     GModule *module;
@@ -22,7 +23,7 @@ typedef struct {
     setPortFunc setPort;
     getAddressFunc getAddress;
     setAddressFunc setAddress;
-    focusUiFunc focusUI;
+//    focusUiFunc focusUI;
 } pluginStruct;
 
 typedef struct {
