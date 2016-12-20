@@ -45,7 +45,7 @@ offok:
 
     in      a,(0x10)        ; show something on the two simple outputs
     out     (0x12),a
-    xor     0xff
+    cpl                     ; invert
     out     (0x14),a
 
 

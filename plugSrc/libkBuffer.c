@@ -22,6 +22,7 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
     guint width, height;
     GdkRGBA color;
 
+
     for (int y=0;y<64;y++) {
         for (int x=0;x<128;x++) {
             int a=y*16; // 128/8
@@ -29,15 +30,38 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
             int b=x % 8;
 
             if (CHECK_BIT(((kBufferVars*)data)->buffer[a],b))
-                            cairo_rectangle (cr, x*4, y*4, 4, 4);
+                            cairo_rectangle (cr, x*4, y*4, 3, 3);
         }
     }
-    gtk_style_context_get_color (gtk_widget_get_style_context (widget),
-               0, &color);
+    //gtk_style_context_get_color (gtk_widget_get_style_context (widget),
+    //           0, &color);
+    color.red = 0.2;
+    color.green = 0.6;
+    color.blue = 0.2;
+    color.alpha = 1;
+    
     gdk_cairo_set_source_rgba (cr, &color);
 
     cairo_fill (cr);
 
+    for (int y=0;y<64;y++) {
+        for (int x=0;x<128;x++) {
+            int a=y*16; // 128/8
+            a=a+((int)(x/8));
+            int b=x % 8;
+
+            if (!CHECK_BIT(((kBufferVars*)data)->buffer[a],b))
+                            cairo_rectangle (cr, x*4, y*4, 3, 3);
+        }
+    }
+    color.red = 0.2;
+    color.green = 1.0;
+    color.blue = 0.2;
+    color.alpha = 1;
+
+    gdk_cairo_set_source_rgba (cr, &color);
+
+    cairo_fill (cr);
 
 
     return FALSE;
