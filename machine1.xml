@@ -1,5 +1,11 @@
 
 <machine name="machine1">
+
+    <plugin
+        libName="kBuffer"
+        portStart="0x20"
+        addressStart="0x4000" />
+
     <plugin
         libName="simpleIn"
         label="input switches"
@@ -15,8 +21,4 @@
         label="inverted value"
         portStart="0x14" />
 
-    <plugin
-        libName="kBuffer"
-        portStart="0x20"
-        addressStart="0x4000" />
 </machine>

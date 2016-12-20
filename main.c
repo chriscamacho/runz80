@@ -314,8 +314,15 @@ void endElement(void *data, const char *el)
 }
 
 
-int main( int argc, char **argv ) {
+void centreWidget (GtkWidget *child, gpointer data) {
+    // “halign”                   GtkAlign
+    // GTK_ALIGN_CENTER
+    gtk_widget_set_halign (child, GTK_ALIGN_CENTER);
+}
 
+
+int main( int argc, char **argv )
+{
     for (int i=0; i<0x10000; i++) {
         memory[i] = 0;
     }
@@ -377,9 +384,11 @@ int main( int argc, char **argv ) {
         XML_ParserFree(parser);
     }
 
+    gtk_container_foreach (GTK_CONTAINER (pluginPanel), (GtkCallback) centreWidget, NULL);
     gtk_widget_show_all ( (GtkWidget*)mainwin );
     gtk_main ();
 
 
     return 0;
 }
+

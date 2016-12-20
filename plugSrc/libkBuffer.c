@@ -36,7 +36,7 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
     //gtk_style_context_get_color (gtk_widget_get_style_context (widget),
     //           0, &color);
     color.red = 0.2;
-    color.green = 0.6;
+    color.green = 1.0;
     color.blue = 0.2;
     color.alpha = 1;
     
@@ -55,7 +55,7 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
         }
     }
     color.red = 0.2;
-    color.green = 1.0;
+    color.green = 0.6;
     color.blue = 0.2;
     color.alpha = 1;
 
