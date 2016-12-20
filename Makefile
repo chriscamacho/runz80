@@ -12,7 +12,7 @@ asm: asm/test1.bin asm/test2.bin asm/scratch.bin asm/hello-input.bin
 asm/%.bin: asm/%.asm
 	z88dk/bin/z80asm -l -b -o=$@ $<
 
-plugins: plugins/libsimpleOut.so plugins/libsimpleIn.so plugins/libkBuffer.so
+plugins: plugins/libsimpleOut.so plugins/libsimpleIn.so plugins/libkBuffer.so plugins/libkeyjoy.so
 
 plugins/%.so: plugSrc/%.c
 	gcc -o $@ -fPIC -shared $(CFLAGS) $< $(LIBS)

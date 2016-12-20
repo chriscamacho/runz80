@@ -21,4 +21,9 @@
         label="inverted value"
         portStart="0x14" />
 
+    <plugin
+        libName="keyjoy"
+        label="keyboard joystick"
+        portStart="0x16" />
+        
 </machine>

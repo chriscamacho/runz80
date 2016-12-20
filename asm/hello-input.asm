@@ -43,7 +43,7 @@ offok:
 
 
 
-    in      a,(0x10)        ; show something on the two simple outputs
+    in      a,(0x16)        ; show something on the two simple outputs
     out     (0x12),a
     cpl                     ; invert
     out     (0x14),a

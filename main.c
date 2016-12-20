@@ -386,6 +386,7 @@ int main( int argc, char **argv )
 
     gtk_container_foreach (GTK_CONTAINER (pluginPanel), (GtkCallback) centreWidget, NULL);
     gtk_widget_show_all ( (GtkWidget*)mainwin );
+    gtk_window_set_position(GTK_WINDOW(mainwin), GTK_WIN_POS_CENTER_ALWAYS);
     gtk_main ();
 
 
