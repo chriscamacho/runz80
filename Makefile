@@ -7,12 +7,13 @@ all: runz80 asm plugins
 runz80: main.c plugin.c
 	gcc $(CFLAGS) -o runz80 libz80/z80.c main.c plugin.c $(LIBS)
 
-asm: asm/test1.bin asm/test2.bin asm/scratch.bin asm/hello-input.bin
+asm: asm/test4.bin asm/yarc-test5.bin asm/serialOutTest.bin asm/test1.bin asm/test2.bin asm/scratch.bin asm/hello-input.bin asm/breakout.bin
+
 
 asm/%.bin: asm/%.asm
 	z88dk/bin/z80asm -l -b -o=$@ $<
 
-plugins: plugins/libsimpleOut.so plugins/libsimpleIn.so plugins/libkBuffer.so plugins/libkeyjoy.so
+plugins: plugins/libterminal.so plugins/libsimpleOut.so plugins/libsimpleIn.so plugins/libkBuffer.so plugins/libkeyjoy.so
 
 plugins/%.so: plugSrc/%.c
 	gcc -o $@ -fPIC -shared $(CFLAGS) $< $(LIBS)

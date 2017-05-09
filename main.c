@@ -84,6 +84,7 @@ void on_run(GtkWidget* widget,gpointer user_data)
 
     if (running) {
         gtk_button_set_label ((GtkButton*)runButton,"Stop");
+        gtk_widget_grab_focus (pluginPanel);
     } else {
         gtk_button_set_label ((GtkButton*)runButton,"Run");
     }
@@ -129,7 +130,7 @@ void on_load(GtkWidget* widget,gpointer user_data)
                                           GTK_RESPONSE_ACCEPT,
                                           NULL);
 
-
+    gtk_file_chooser_set_current_folder ((GtkFileChooser*)dialog,"asm/");
     GtkFileFilter *filter = gtk_file_filter_new ();
     gtk_file_filter_add_pattern (filter, "*.bin");
     gtk_file_chooser_add_filter ((GtkFileChooser*)dialog, filter);
@@ -155,7 +156,6 @@ void on_load(GtkWidget* widget,gpointer user_data)
     }
 
     gtk_widget_destroy (dialog);
-
 }
 
 static byte context_mem_read_callback(int param, ushort address)
@@ -354,6 +354,8 @@ int main( int argc, char **argv )
     memCont2 = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"memCont2"));
 
     pluginPanel = GTK_WIDGET(gtk_builder_get_object(gtkBuilder,"pluginPanel"));
+    gtk_widget_set_can_focus(pluginPanel,TRUE);
+
     
     g_object_unref ( G_OBJECT(gtkBuilder) );
     gtk_widget_show_all ( mainwin );

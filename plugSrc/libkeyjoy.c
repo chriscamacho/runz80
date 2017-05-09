@@ -10,7 +10,7 @@ typedef struct {
 } keyjoyVars;
 
 int joyVal(GdkEventKey* event) {
-    int v;
+    int v=0;
     switch (event->keyval)
     {
         case GDK_KEY_Left:
@@ -50,8 +50,8 @@ gboolean keyRelease(GtkWidget* widget, GdkEventKey* event, gpointer vars)
     //g_print("key release 0x%02x 0x%02x\n",v,((keyjoyVars*)vars)->keyVal);
 }
 
-G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent) {
-
+G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent)
+{
     plugInstStruct* pl = (plugInstStruct*)inst;
 
     pl->data = malloc(sizeof(keyjoyVars));
@@ -74,13 +74,15 @@ G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent) {
 G_MODULE_EXPORT int getPortSize() { return 1; }
 G_MODULE_EXPORT int getAddressSize() { return 0; }
 
-G_MODULE_EXPORT byte getPort(void* inst, int port) {
+G_MODULE_EXPORT byte getPort(void* inst, int port)
+{
     plugInstStruct* pl = (plugInstStruct*)inst;
     keyjoyVars* vars = ((keyjoyVars*)pl->data);
     return vars->keyVal;
 }
 
-G_MODULE_EXPORT void setPort(void* inst, int port, byte val) {
+G_MODULE_EXPORT void setPort(void* inst, int port, byte val)
+{
     g_print("Warning: port 0x%02x (%s) is input only!\n", port, ((plugInstStruct*)inst)->name);
 }
 
