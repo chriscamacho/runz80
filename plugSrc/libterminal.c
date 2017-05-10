@@ -51,7 +51,9 @@ G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent) {
 	fcntl(vars->fdm, F_SETFL, 0);				// don't block read
 
     vars->text = (GtkLabel*)gtk_label_new(slavename);
-    //gtk_label_set_text(vars->text, slavename);
+    char cmd[1024];
+    snprintf(cmd,1023,"xterm -e \"miniterm %s\" &\0",slavename);
+    system(cmd);
     
     gtk_container_add (GTK_CONTAINER (vars->parent), (GtkWidget*)vars->text);
 }

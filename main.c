@@ -51,6 +51,7 @@ void on_reset(GtkWidget* widget,gpointer user_data)
     Z80RESET(&context);
     dump_z80_state();
 }
+
 void on_addressChange(GtkWidget* widget,gpointer user_data)
 {
     int m = (int)strtol(gtk_entry_get_text((GtkEntry*)addressInput), NULL, 16);
@@ -64,8 +65,6 @@ void on_addressChange(GtkWidget* widget,gpointer user_data)
     gtk_entry_set_text ((GtkEntry*)memCont2,tmpstr);
 
 }
-
-
 
 gboolean on_idle( gpointer data );
 
@@ -115,6 +114,21 @@ void on_step(GtkWidget* widget,gpointer user_data)
     }
 }
 
+
+void loadBin(char *filename) {
+	FILE *file = fopen( filename, "r" );
+	if ( file == 0 ) {
+		printf( "Could not open file\n" );
+	} else {
+		int x;
+		long p=0;
+		while  ( ( x = fgetc( file ) ) != EOF ) {
+			memory[p++]=x;
+		}
+		fclose( file );
+	}
+}
+
 void on_load(GtkWidget* widget,gpointer user_data)
 {
     GtkWidget *dialog;
@@ -141,17 +155,9 @@ void on_load(GtkWidget* widget,gpointer user_data)
         char *filename;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
         filename = gtk_file_chooser_get_filename (chooser);
-        FILE *file = fopen( filename, "r" );
-        if ( file == 0 ) {
-            printf( "Could not open file\n" );
-        } else {
-            int x;
-            long p=0;
-            while  ( ( x = fgetc( file ) ) != EOF ) {
-                memory[p++]=x;
-            }
-            fclose( file );
-        }
+
+        loadBin(filename);
+
         g_free (filename);
     }
 
@@ -389,6 +395,12 @@ int main( int argc, char **argv )
     gtk_container_foreach (GTK_CONTAINER (pluginPanel), (GtkCallback) centreWidget, NULL);
     gtk_widget_show_all ( (GtkWidget*)mainwin );
     gtk_window_set_position(GTK_WINDOW(mainwin), GTK_WIN_POS_CENTER_ALWAYS);
+
+	if (argc==3) {
+		loadBin(argv[2]);
+		printf("loaded %s\n",argv[2]);
+	}
+    
     gtk_main ();
 
 
