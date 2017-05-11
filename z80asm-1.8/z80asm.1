@@ -1,0 +1,316 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" z80asm.1 - manual page
+.\" Copyright 2005-2007 Bas Wijnen <wijnen@debian.org>
+.\" This file is part of z80asm.
+.\"
+.\" Z80asm is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" Z80asm is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH Z80ASM 1 "May 10, 2005"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+z80asm \- assembler for the Z80 microprocessor
+.SH SYNOPSIS
+.B z80asm
+.RI [ options ] " " [ "files..." ]
+.SH DESCRIPTION
+Z80asm is an assembler for Z80 assembly.
+If no input files are specified, stdin is used.  If no output file is
+specified, "a.bin" is used.  If "-" is specified as output file, stdout is
+used.  This makes it possible to use the assembler in a pipeline.
+.PP
+When multiple input files are specified, the assembler first uses all files
+which were specified with \-i or \-\-input, in the order given.  After that, all
+files which were specified as non\-option arguments are assembled, also in the
+order given.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show summary of options and exit.
+.TP
+.B \-V, \-\-version
+Display version information and exit.
+.TP
+.B \-v, \-\-verbose
+Be verbose.  Specify multiple times to be more verbose.  Messages are sent to
+standard error.
+.TP
+.BR "\-l, \-\-list" [=filename]
+Write a list file.  No filename or '-' means stderr.
+.TP
+.BR "\-L, \-\-label" [=filename]
+Write a label file.  No filename or '-' means stderr.
+.TP
+.BR "\-p, \-\-label\-prefix" =prefix
+prefix all labels with this prefix.
+.TP
+.BR "\-i, \-\-input" =filename
+Specify an input file (\-i may be omitted).  '-' means stdin.
+.TP
+.BR "\-o, \-\-output" =filename
+Specify the output file.  '-' or completely omitting the option means stdout.
+.TP
+.BR "\-I, \-\-includepath" =dirname
+Add a directory to the include path.  The order in which the directories are
+tried is from back to front: the last directory specified has the highest
+priority.  "/usr/share/z80asm" is always in the include path (with lowest
+priority), you don't have to specify it.
+.TP
+.B \-f, \-\-force
+Produce output even in case of errors.  Normally the output, list and label
+files are removed when assembly is unsuccesful.
+
+.SH ASSEMBLER DIRECTIVES
+All mnemonics and registers are case insensitive.  All other text (in
+particular, labels and macros) are not.
+Undocumented opcodes are as much as possible supported:
+.TP
+sll and sli are equal and can both be used.
+.TP
+ixh, ixl, iyh and iyl can be used.
+.PP
+Assembler directives are:
+.TP
+.BR incbin " 'filename'"
+Include a binary file into the resulting assembled file.  This can be used to
+include text files, or images, sound files, etc.  The filename is searched for
+in the current directory, and then in the include path, just like for include.
+Also like for include, the quotes can be any character (but must match) and
+no substitution is performed (so ~ is not your home directory).
+.TP
+.BR defb " or " db " arg, arg, arg, ..."
+Define bytes.
+.TP
+.BR defm " or " dm " " "" """String""" "" ", 'String'"
+Define message.  Each character in the string is stored as one byte.  Backslash
+escapes are allowed, as in characters in expressions.  Unlike the argument for
+include, the quotes must really be quotes (but they can be single or double
+quotes.  The closing quote must match the opening quote.)
+.PP
+defb/db and defm/dm are really aliases; either can take both
+quoted strings and numbers:
+.br
+defb "This text should be in a buffer\\r\\n", 0
+.TP
+.BR defs " or " ds " count [, value]"
+Define space.  count bytes are reserved.  Each of them is initialised to the
+specified value, or 0 if no value is specified.
+.TP
+.BR defw " or " dw " arg, arg, arg, ..."
+Define words.  Each argument is stored as two bytes, the low order byte first.
+.TP
+.B end
+End assembly of this source file.  Any remaining lines are copied into the list
+file (if present), but not assembled.
+.TP
+.RB "label: " equ " expression"
+Define label to have value expression.
+.PP
+.BR if " expression"
+.br
+code block 1
+.br
+.B else
+.br
+code block 2
+.br
+.B else
+.br
+code block 3
+.br
+.B ...
+.br
+code block n
+.br
+.B endif
+.RS
+Conditionally assemble code.  If expression is not 0, all odd code blocks are
+assembled, if expression is 0, all even blocks are assembled.  Usually only
+one or two code blocks are present.
+.RE
+.TP
+.BR include " 'file'"
+Include file into the source.  The quotes around the file for include are
+mandatory, but you can choose the quotes yourself.  eg, you may use % or even
+a letter as a quote.  The filename does not undergo any expansion, so \\, ~,
+$, etc are passed as written (which means ~ will not be your home directory.)
+The filename is used as specified, and then prefixed with each directory in the include path, until it can be opened.
+.PP
+.RB "label: " macro " arg1, arg2, ..."
+.br
+code block
+.br
+.B endif
+.RS
+Define a macro.  The macro can be used where an opcode is expected.  The code
+block is then substituted, with the given values for the arguments.  This is
+a textual substitution, so the following example is valid:
+.RE
+makelabel name
+.br
+label_name:
+.br
+endm
+.RS
+This will generate a label with a constructed name (it's not a very useful
+example, but it shows the possiblities).
+.RE
+.TP
+.BR org " address"
+Set the "program counter" to address.  This does not add any bytes to the
+resulting binary, it only determines how the rest of the code is interpreted
+(in particular, the value of labels and
+.BR $ ).
+.TP
+.BR seek " offset"
+Seek to position offset in the output file.  This can be used for overwiting
+previously assembled code, for example for patching a binary which was included
+using
+.BR incbin .
+
+.SH EXPRESSIONS
+All expressions can use the following operators, in order of precedence:
+.RB ( a ", " b " and " c " denote subexpressions)"
+.TP
+.B a ? b : c
+If a is not zero, return b, otherwise c
+.TP
+.B a | b
+bitwise or
+.TP
+.B a ^ b
+bitwise xor
+.TP
+.B a & b
+bitwise and
+.TP
+.B a == b, a = b, a != b
+equality
+.TP
+.B a <= b, a >= b, a < b, a > b
+inequality
+.TP
+.B a << b, a >> b
+bit shift
+.TP
+.B a + b, a \- b
+addition and subtraction
+.TP
+.B a * b, a / b, a % b
+multiplication, division and modulo
+.TP
+.B ~a, +a, \-a
+bitwise not, no effect and negation
+.TP
+.BR ? label
+1 if label exists, 0 if it does not.  This does not generate an error if label
+does not exist.  Note that this is usually evaluated immediately (if the rest
+of the expression permits), and it does not check if the label is defined
+later.  This means it can be used as the argument of
+.B if
+, to get the functionality of #ifdef in C.
+.TP
+.B (a)
+parenthesis
+.PP
+
+Literals in expressions may be written as: (case does not matter)
+.TP
+.B @c11
+arbitrary base number (specified by 'c' so c+1 == 10: here base is 13)
+.TP
+.B 14, 14d, @914
+decimal number
+.TP
+.B 016, 16o, 16q, &o16, @716
+octal number
+.TP
+.B 0Eh, 0xE, &hE, $E, @FE
+hexadecimal number (for the first notations, the first character must be 0\-9)
+.TP
+.B %1110, 1110b, &b1110, @11110
+binary number
+.TP
+.B 's'
+ASCII code of 's'
+.TP
+.B '\\\\n', '\\\\r', '\\\\a', '\\\\t'
+Newline, carriage return, alert, tab
+.TP
+.B '\\\\nnn'
+Octal ASCII code
+.TP
+.B $
+address of first byte of current command
+
+.SH LABELS
+In all expressions, labels may be used.  However, there are some expressions
+where the value must be computable at once, and therefore only previously
+defined labels may be used.  This is the case for:
+.TP
+\- The argument of org
+.TP
+\- The argument of seek
+.TP
+\- The argument of equ (eg, a label definition)
+.TP
+\- The first argument of ds
+.TP
+\- The argument of if
+.PP
+In all other expressions, labels which are defined later may be used.
+.PP
+Labels must consist of letters, digits, underscores and periods, and must not
+start with a digit.  Labels are case sensitive.
+.PP
+Labels starting with a period (.) are
+.B local
+, which means their scope is only the current include file or macro definition
+(and files included/macros called from it).  This is particularly useful for
+macros, to prevent duplicate definitions when using a macro more than once.
+
+.SH EXIT STATUS
+If assembly was successful, no output is produced (except the result, and
+messages triggered by --verbose) and 0 is returned.  At any error, there is
+output on the standard error and 1 is returned.
+
+.SH NOTES
+Parts that are not assembled because of an if statement and macros which are
+defined but never used are only checked to have a correct command. The
+argument is not parsed.  This means that if the file passes through the
+assembler with no warnings or errors, it may still not assemble correctly in
+a different setting (where the if's give different results).
+
+.SH BUGS
+If you find a bug, or want to send comments, please use the web interface at
+http://savannah.nongnu.org/projects/z80asm/ or send an e\-mail to
+wijnen@debian.org.
+
+.SH AUTHOR
+Z80asm was written by Bas Wijnen <wijnen@debian.org>.
+Some patches were provided by Jan Wilmans <jw@dds.nl>

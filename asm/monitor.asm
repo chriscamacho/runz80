@@ -1,9 +1,7 @@
 ; connects to a terminal see simple.xml,
 
-
-SerIO:		equ		0x20
-SerAvail:	equ		0x21
-
+	SerIO:		equ		0x20
+	SerAvail:	equ		0x21
 
 	org 0
 
@@ -28,11 +26,12 @@ loop:
 	ld		hl,nl
 	call	printString
 	
+	pop		af
+	ld		hl,replyval
+	call	printByte
+
 	ld		hl,reply
 	call	printString
-
-	pop		af
-	call	printByte
 
 	ld		hl,dnl
 	call	printString
@@ -40,7 +39,7 @@ loop:
 
 	halt
 
-; blocking get a char
+; blocking get char, returns A
 getCh:
 	in		a,(SerAvail)
 	cp		0
@@ -48,7 +47,7 @@ getCh:
 	in		a,(SerIO)
 	ret
 
-
+; HL start of string must be \0 terminated
 printString:
 	ld		a,(hl)
 	cp		0
@@ -59,7 +58,8 @@ cont:
 	inc		hl
 	jp		printString
 
-
+; writes the hexadecimal value in A
+; into a string overwriting at HL
 printByte:
 	ld		d,a
 	srl		a
@@ -74,7 +74,8 @@ printByte:
 g91:
 	add		0x30
 l91:
-	out		(SerIO),a
+;	out		(SerIO),a
+	ld		(hl),a
 
 	ld		a,d
 	and		0xf
@@ -86,11 +87,14 @@ l91:
 g92:
 	add		0x30
 l92:
-	out		(SerIO),a
+	inc		hl
+	ld		(hl),a
+	;out		(SerIO),a
 	
 	ret
 
 nl:			defb	"\r\n\0"
 dnl:		defb	"\r\n\r\n\0"
 pkeymsg:	defb	"Press a key \0"
-reply:		defb	"You pressed ascii 0x\0"
+reply:		defb	"You pressed ascii 0x"
+replyval:	defb	"XX\0"

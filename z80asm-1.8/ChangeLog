@@ -1,0 +1,216 @@
+2009-04-11  Bas Wijnen  <wijnen@debian.org>
+
+	* z80asm.c: Fixed bug that defw/dw didn't accept more than one
+	argument.
+
+2009-01-18  Bas Wijnen  <wijnen@debian.org>
+
+	* expressions.c: Fix incorrect valid declaration of expressions when
+	only the last label is valid.  Thanks to Tomaž Šolc for reporting.
+
+2007-09-09  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.c: Wrap program counter consistently.
+	* z80asm.c, z80asm.h: Fix error reporting in references.
+	* all files: Update license to GPL version 3 or later.
+	* Makefile: Improve make dist, and make it work with git.
+
+2007-06-14  Bas Wijnen  <shevek@fmf.nl>
+
+	* VERSION: Updated to 1.5
+	* z80asm.c, z80asm.h: Fix handling of $ in stored expressions (thanks
+	to Tomaz Solc for reporting and analysing this.
+	* Makefile: Remove executable if tests fail.
+	* tests/pass.asm, tests/pass.correct-bin: Add some tests.
+	* z80asm.c: Make unresolvable references a normal error (instead of an
+	internal assembler problem).
+
+2007-06-05  Bas Wijnen  <shevek@fmf.nl>
+
+	* VERSION: Updated to 1.4
+	* z80asm.c: Fix bit/set/res instructions.
+
+2007-05-24  Bas Wijnen  <wijnen@debian.org>
+
+	* VERSION: Updated to 1.3.
+	* tests, tests/pass.asm, tests/pass.correct-bin,
+	tests/pass.correct-err, tests/Makefile: Add test suite to spot
+	regressions.
+	* expressions.c, z80asm.h: New files, split from z80asm.c.
+	* Makefile: Updated.
+	* expressions.c, z80asm.c: Warn for value truncation, warn for
+	expressions fully in parenthesis, improve skipword so it doesn't break
+	on comments with parentheses, improve expression parsing so
+	"ld a, (1) + 1" doesn't result in an error.
+	* examples/macro.asm: Fixed to make it usable as a rom.
+	* z80asm.1: Updated.
+
+2005-11-30  Jan Wilmans  <jw@dds.nl>
+
+	* z80asm.c: Added unoffical syntax of ADD A,r as ADD r
+	* z80asm.c: Added unoffical syntax of SUB r as SUB A,r
+
+2005-11-30  Jan Wilmans  <jw@dds.nl>
+
+	* z80asm.c: Added new seek command
+
+2005-11-29  Jan Wilmans  <jw@dds.nl>
+
+	* z80asm.c: Added two extra verbosity levels.
+
+2005-11-13  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.c: Run indent.
+
+2005-10-14  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.c (struct reference, compute_ref, new_reference): Removed
+	copy of stack frame from struct reference.
+
+2005-09-14  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.c (open_include_file, assemble): Open incbin'd files as
+	binary.
+
+2005-06-16  Bas Wijnen  <shevek@fmf.nl>
+
+	* Makefile: Fix incorrect version.
+	* z80asm.c (enum mnemonic, mnemonics, assemble), examples/hello.asm:
+	Rename bininclude to incbin.
+	* z80asm.c (readcommand, assemble), examples/macro.asm: Allow labels
+	before endm and endif.
+
+2005-05-19  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.c (struct reference, printerr, compute_ref, new_reference,
+	assemble): Added stack frame to reference.
+	* z80asm.c (labelfilename, parse_commandline): Remove output files
+	when compilation fails.
+	* z80asm.c (use_force, parse_commandline, assemble, main): Implement
+	--force.
+	* z80asm.c (parse_commandline): Make a.bin the default target.
+	* z80asm.c (check_label, rd_label, rd_value, rd_expr,
+	get_include_name, assemble): Give errors about junk at end of
+	line or expression.
+	* z80asm.c (rd_value): Support double quotes for character constants.
+	* z80asm.c (rd_expr_equal): Support = for equality.
+	* z80asm.1: Updated manpage.
+
+2005-05-18  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.c (enum mnemonic, enum reftype, struct reference, struct
+	label, struct stack, struct macro_arg, struct macro_line, struct
+	macro, mnemonics, firstmacro, define_macro, sp, stack, readlabel,
+	rd_expr, compute_ref, check_label, rd_label, rd_value, rd_factor,
+	rd_term, rd_expr_shift, rd_expr_unequal, rd_expr_equal, rd_expr_and,
+	rd_expr_xor, rd_expr_or, new_reference, wrt_ref, read_line,
+	get_macro_args, assemble): Added macro support.
+	* z80asm.c (rd_value): Added several radix notations.
+	* examples/macro.asm: New file.
+
+2005-05-17  Bas Wijnen  <shevek@fmf.nl>
+
+	* Makefile (clean): Clean examples and headers.
+	* Makefile (dist): Make versioned tarballs.
+	* z80asm.c (buffer, try_use_real_file, flush_to_real_file,
+	parse_commandline, assemble): Generalise writing to non-seekable
+	files.
+	* z80asm.c (reallistfile, parse_commandline, assemble): Use it for
+	list file.
+	* z80asm.c (read_line, assemble): Remove arbitrary line length limit.
+
+2005-05-13  Bas Wijnen  <shevek@fmf.nl>
+
+	* examples/Makefile, examples/hello.asm, headers/msx-bios.asm,
+	headers/msx2-bios.asm, headers/msx2+-bios.asm,
+	headers/msxturbor-bios.asm: New files.
+	* z80asm.c (struct includedir, firstincludedir, open_include_file,
+	add_include, parse_commandline, assemble, main): Use include path.
+	* z80asm (parse_commandline): Make stderr default for list and label
+	files.
+	* z80asm.c (enum mnemonic, mnemonics, get_include_name, assemble): Add
+	bininclude directive.
+	* z80asm.c (printerr, assemble): Make error output parsable.
+	* z80asm.1: Updated.
+
+2005-05-11  Bas Wijnen  <shevek@fmf.nl>
+
+	* Makefile (top level, dist): Use versions instead of dates.
+	* VERSION: New file.
+	* BUGS, NEWS, README: Removed.
+
+2005-05-10  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.1: New file.
+	* z80asm.c (enum mnemonic, mnemonic, assemble): Support END directive.
+	* z80asm.c (compare, indx, readlabel): Use strncasecmp instead of
+	compare.
+	* z80asm.c (assemble): Fix bug with strings in DEFB.
+	* z80asm.c (assemble): Allow backslash-escapes in DEFB strings.
+	* z80asm.c (rd_character): Allow octal escapes in strings.
+
+2005-03-11  Bas Wijnen  <shevek@fmf.nl>
+
+	* z80asm.c (rd_r): Fixed index prefix.
+	* z80asm.c (assemble): Fixed register count errors.
+
+2004-10-01  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* z80asm (rd_comma): Fixed possible buffer overflow.
+	* z80asm (parse_commandline): Improved --help output.
+	* z80asm (new_reference): Removed useless ++.
+	* z80asm (wrt_ref, assemble): Improved list output for ds.
+
+2004-10-01  H. Peter Anvin  <hpa@users.sourceforge.net>
+
+	* z80asm.c (enum mnemonic, mnemonics, assemble): Added dm/defm as an
+	alias for db/defb.
+	* README: Updated documentation accordingly.
+	* z80asm.c (write_one_byte, wrtb, new_reference, wrt_ref, assemble):
+	Fixed bug regarding addr increments.
+
+2004-09-29  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* z80asm.c: added global variable labelprefix.
+	* z80asm.c (parse_commandline, assemble): Support prefixing labels.
+	* z80asm.c (assemble): fixed bug in label output.
+
+2004-09-29  H. Peter Anvin  <hpa@users.sourceforge.net>
+
+	* Makefile: Fixed "make clean", removed -Werror for cygwin.
+	* z80asm.c (rd_out): implemented out (c),0.
+
+2004-09-28  H. Peter Anvin  <hpa@users.sourceforge.net>
+
+	* z80asm.c (rd_number): Added ouput parameter endptr.  Changed all
+	callers.
+	* z80asm.c (rd_value): Added support for Zilog-style base
+	specification.
+	* README: Updated documentation.
+
+2004-09-22  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* z80asm.c (assemble): Bugfixes to make ld (nn),a and ld sp,nn work.
+
+2003-11-19  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* z80asm.c: Changed expression handling, bugfixes.
+	
+2003-10-30  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* z80asm.c: Added binary output as hex to listfile.
+
+2003-10-30  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* z80asm.c: Added support for quoted strings in defb, added comments,
+	added long option support and help/version information.
+	* README: Updated documentation.
+
+2002-05-15  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* z80asm.c (rd_expr): Added equations in expr and bugfix
+	(assemble): Added if/else/endif
+
+2002-04-28  Bas Wijnen  <b.wijnen@phys.rug.nl>
+
+	* assembler.c: Started changelog

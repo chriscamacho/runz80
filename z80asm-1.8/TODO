@@ -1,0 +1,5 @@
+TODO for shevek's Z80 assembler:
+- make header files containing MSX system constants
+- a flag for warnings about unofficial instructions would be nice
+- an "export" assembler directive to specify the labels to be exported with -L
+- add internationalization support.
