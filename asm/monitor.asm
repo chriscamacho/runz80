@@ -17,24 +17,22 @@ loop:
 	ld		hl,dnl
 	call	printString
 
-	ld		hl,pkeymsg
-	call	printString
 
-	call	getCh
-	push	af
-
-	ld		hl,nl
-	call	printString
-	
-	pop		af
-	ld		hl,replyval
-	call	printByte
-
-	ld		hl,reply
-	call	printString
+	ld		b,8
+	ld		hl,0
+adloop:
+	ld		a,(hl)
+	inc		hl
+	call	serPrintByte
+	ld		a,32
+	out		(SerIO),a
+	djnz	adloop
 
 	ld		hl,dnl
-	call	printString
+	call	printString	
+	
+	
+	
 
 
 	halt
@@ -56,7 +54,7 @@ printString:
 cont:
 	out		(SerIO),a
 	inc		hl
-	jp		printString
+	jr		printString
 
 ; writes the hexadecimal value in A
 ; into a string overwriting at HL
@@ -93,8 +91,40 @@ l92:
 	
 	ret
 
+; writes the hexadecimal value in A
+; into a string overwriting at HL
+serPrintByte:
+	ld		d,a
+	srl		a
+	srl		a
+	srl		a
+	srl		a
+	cp		0xa
+	jr		c,sg91
+
+	add		0x37
+	jr		sl91
+sg91:
+	add		0x30
+sl91:
+	out		(SerIO),a
+
+	ld		a,d
+	and		0xf
+	cp		0xa
+	jr		c,sg92
+
+	add		0x37
+	jr		sl92
+sg92:
+	add		0x30
+sl92:
+	out		(SerIO),a
+	
+	ret
+
+
 nl:			defb	"\r\n\0"
 dnl:		defb	"\r\n\r\n\0"
-pkeymsg:	defb	"Press a key \0"
-reply:		defb	"You pressed ascii 0x"
-replyval:	defb	"XX\0"
+
+askAddress:	defb	"Enter address: \0"
