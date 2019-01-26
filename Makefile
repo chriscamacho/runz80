@@ -1,7 +1,10 @@
 ASM = z80asm-1.8/z80asm
-LIBS = `pkg-config --libs expat gtk+-3.0 gmodule-2.0` -ldl
-CFLAGS = -g `pkg-config --cflags expat gtk+-3.0 gmodule-2.0` -rdynamic -std=c99
-ASMFILES = $(wildcard asm/*.asm)
+LIBS:= $(shell pkg-config --libs expat gtk+-3.0 gmodule-2.0) -ldl
+CFLAGS:= -g $(shell pkg-config --cflags expat gtk+-3.0 gmodule-2.0) -rdynamic -std=c99
+ASMFILES:= $(wildcard asm/*.asm)
+PLUGSRC:= $(wildcard plugSrc/*.c)
+PLUGS:= $(PLUGSRC:.c=.so)
+PLUGDEST:= $(subst plugSrc,plugins,$(PLUGS))
 
 
 all: runz80 plugins z80asm-1.8/z80asm asm
@@ -19,7 +22,9 @@ z80asm-1.8/z80asm:
 	gcc -DVERSION=\"1.8\" z80asm-1.8/z80asm.c z80asm-1.8/expressions.c -o z80asm-1.8/z80asm
 
 
-plugins: plugins/libterminal.so plugins/libsimpleOut.so plugins/libsimpleIn.so plugins/libkBuffer.so plugins/libkeyjoy.so
+#plugins: plugins/libterminal.so plugins/libsimpleOut.so plugins/libsimpleIn.so plugins/libkBuffer.so plugins/libkeyjoy.so
+
+plugins: $(PLUGDEST)
 
 plugins/%.so: plugSrc/%.c
 	gcc -o $@ -fPIC -shared $(CFLAGS) $< $(LIBS)

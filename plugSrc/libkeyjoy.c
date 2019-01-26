@@ -61,7 +61,7 @@ G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent)
     vars->label = (GtkLabel*)gtk_label_new ("");
     vars->keyVal = 0;
 
-    gchar* l = g_strdup_printf ("%s",(const gchar *)&pl->name); 
+    gchar* l = g_strdup_printf ("%s (cursor keys and left shift/ctrl)",(const gchar *)&pl->name); 
     gtk_label_set_text ((GtkLabel*)vars->label,l);
     g_free(l);
     

@@ -53,6 +53,7 @@ G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent) {
     vars->text = (GtkLabel*)gtk_label_new(slavename);
     char cmd[1024];
     snprintf(cmd,1023,"xterm -e \"miniterm %s\" &\0",slavename);
+    //snprintf(cmd,1023,"xterm -e \"minicom %s\" &\0",slavename);
     system(cmd);
     
     gtk_container_add (GTK_CONTAINER (vars->parent), (GtkWidget*)vars->text);

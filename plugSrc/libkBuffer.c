@@ -99,6 +99,10 @@ G_MODULE_EXPORT void setPort(void* inst, int port, byte val) {
     plugInstStruct* pl = (plugInstStruct*)inst;
     kBufferVars* vars = ((kBufferVars*)pl->data);
     gtk_widget_queue_draw_area (vars->drawing_area, 0, 0, 512, 256);
+    while (g_main_context_pending(NULL)) 
+    {
+        g_main_context_iteration(NULL,FALSE);
+    }
 }
 
 

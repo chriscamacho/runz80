@@ -260,6 +260,16 @@ static void dump_z80_state( void )
     setValText((GtkEntry*)PCtext, PC);
 
     on_addressChange(NULL,NULL);
+    
+    char dcode[256];
+    int i = 0, s = 0;
+    for (int n=0; n<4; n++)
+    {
+        s = Z80Debug (&context, NULL, &dcode[0], i);
+        printf("%04x %s\n",PC+i,dcode);
+        i += s;
+    }
+    printf("---------------\n");
 }
 
 // cache loaded plugin libraries
@@ -369,7 +379,8 @@ int main( int argc, char **argv )
 
     pluglookup = g_hash_table_new ( g_str_hash , g_str_equal);
 
-    g_print("requested machine config=%s\n",argv[1]);
+	
+    g_print("\n\nrequested machine config=%s\n",argv[1]);
     char buf[BUFSIZ];
     FILE *file = fopen(argv[1], "r" );
     if (file!=NULL) {

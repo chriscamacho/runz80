@@ -22,10 +22,33 @@ loop:
     jr      loop
 
 hellodone:
-    ld      hl,0x4182
+;    ld      hl,0x4182
+    ld      hl,0x4102
     ld      (cursor),hl     ; reset screen position
     ld      hl,message
     ld      (mptr),hl       ; reset message pointer
+
+    
+; draw clear line 0xAA pattern for testing 0x00 to clear
+;    ld      hl,(curoff)
+;    ld      bc,0x10
+;    scf
+;    ccf
+;    sbc     hl,bc
+;    ld      bc,0x4102
+;    add     hl,bc
+    
+;    ld      d,0x00
+;    ld      a,0x0c
+;lineloop:
+;    ld      (hl),d
+;    inc     l
+;    dec     a
+;    cp      0
+;    jp      nz,lineloop
+
+    
+    
 
     ld      hl,(curoff)     ; cursor offset 
     ld      bc,0x10
@@ -59,7 +82,7 @@ offok:
 gtnd:
     add     16              ; 0 is char 16
 
-    ld      hl,0x4088       ; least significant nibble position
+    ld      hl,0x4028       ; least significant nibble position
     call    drawchar
 
 
@@ -76,22 +99,28 @@ gtnd:
 gtnt:
     add     16
 
-    ld      hl,0x4087
+    ld      hl,0x4027
     call    drawchar
 
     out     (0x20),a        ; any value to port 0x20 tells "screen" to refresh        
 
 
 
-    ld      de,0x1000
+;    ld      de,0x1000
+;delayLoop:
+;    nop
+;    dec     de
+;    ld      a,d
+;    or      e
+;    jp      nz,delayLoop
+
+    ld      de,0x0100
 delayLoop:
     nop
     dec     de
     ld      a,d
     or      e
     jp      nz,delayLoop
-
-
 
                             ; clear buffer    
     ld      hl,0x4000       ; HL = start address of block
