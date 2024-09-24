@@ -114,7 +114,7 @@ gtnt:
 ;    or      e
 ;    jp      nz,delayLoop
 
-    ld      de,0x0100
+    ld      de,0x8000
 delayLoop:
     nop
     dec     de
