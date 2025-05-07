@@ -26,7 +26,7 @@ extern int unlockpt(int);
 typedef struct {
     GtkWidget* parent;
     GtkLabel* text;
-    int fdm,fds;	// master and slave file handles.
+    int fdm,fds;    // master and slave file handles.
 
 } terminalVars;
 
@@ -42,18 +42,23 @@ G_MODULE_EXPORT void initialise(void* inst, GtkWidget *parent) {
     terminalVars* vars = ((terminalVars*)pl->data);
     vars->parent = parent;
 
-	vars->fdm = open("/dev/ptmx", O_RDWR);	// open master 
-	grantpt(vars->fdm);						// change permission of slave 
-	unlockpt(vars->fdm);						// unlock slave 
-	char *slavename;
-	slavename = ptsname(vars->fdm);			// get name of slave 
-	vars->fds = open(slavename, O_RDWR);		// open slave 
-	fcntl(vars->fdm, F_SETFL, 0);				// don't block read
+    vars->fdm = open("/dev/ptmx", O_RDWR);  // open master 
+    grantpt(vars->fdm);                     // change permission of slave 
+    unlockpt(vars->fdm);                        // unlock slave 
+    char *slavename;
+    slavename = ptsname(vars->fdm);         // get name of slave 
+    vars->fds = open(slavename, O_RDWR);        // open slave 
+    fcntl(vars->fdm, F_SETFL, 0);               // don't block read
 
     vars->text = (GtkLabel*)gtk_label_new(slavename);
     char cmd[1024];
-    snprintf(cmd,1023,"xterm -e \"miniterm %s\" &\0",slavename);
+    
+    // TODO !!! this command needs to come from settings
+    
+    //snprintf(cmd,1023,"xterm -e \"miniterm %s\" &\0",slavename);
     //snprintf(cmd,1023,"xterm -e \"minicom %s\" &\0",slavename);
+    //snprintf(cmd,1023,"xterm -e \"picocom %s\" &\0",slavename);
+    snprintf(cmd,1023,"xfce4-terminal -e \"picocom %s\" &\0",slavename);
     system(cmd);
     
     gtk_container_add (GTK_CONTAINER (vars->parent), (GtkWidget*)vars->text);
@@ -64,31 +69,31 @@ G_MODULE_EXPORT int getAddressSize() { return 0; }
 
 G_MODULE_EXPORT byte getPort(void* inst, int port) {
 
-	//printf("getPort port=%i\n",port);
-	//return 0xff;
-	int ps = ((plugInstStruct*)inst)->portStart;
-	terminalVars* p= ((plugInstStruct*)inst)->data;
-	int avail=0;
-	ioctl(p->fdm, FIONREAD, &avail);
-	
-	if (ps != port) {	// second port is available bytes
-		return avail & 0xff;
-	} else {	// first port is data
-		if (avail==0) return 0;
-		char c;
-		read(p->fdm, &c, 1);
-		return c;
-	}
+    //printf("getPort port=%i\n",port);
+    //return 0xff;
+    int ps = ((plugInstStruct*)inst)->portStart;
+    terminalVars* p= ((plugInstStruct*)inst)->data;
+    int avail=0;
+    ioctl(p->fdm, FIONREAD, &avail);
+    
+    if (ps != port) {   // second port is available bytes
+        return avail & 0xff;
+    } else {    // first port is data
+        if (avail==0) return 0;
+        char c;
+        read(p->fdm, &c, 1);
+        return c;
+    }
 }
 
 G_MODULE_EXPORT void setPort(void* inst, int port, byte val) {
 
-	int ps = ((plugInstStruct*)inst)->portStart;
-	terminalVars* p= ((plugInstStruct*)inst)->data;
-	//printf("setPort port=%i\n",port);
-	if (ps == port) {
-		write(p->fdm, &val, 1);
-	}
+    int ps = ((plugInstStruct*)inst)->portStart;
+    terminalVars* p= ((plugInstStruct*)inst)->data;
+    //printf("setPort port=%i\n",port);
+    if (ps == port) {
+        write(p->fdm, &val, 1);
+    }
 
 }
 
