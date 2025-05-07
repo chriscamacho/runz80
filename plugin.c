@@ -15,9 +15,9 @@ void integratePlugin(pluginStruct *plugin)
     }
 
     curr = g_get_current_dir();
-    plug = g_strdup_printf ("%s/plugins", curr);
 
-    module_path = g_module_build_path((const gchar *) plug , plugin->libName);
+    // g_module_build_path deprecated using this kludge for now
+    module_path = g_strdup_printf("%s/plugins/lib%s.so", curr, plugin->libName);
 
     g_print("Module path: %s\n", module_path);
 
@@ -25,8 +25,8 @@ void integratePlugin(pluginStruct *plugin)
     if (!plugin->module) {
         g_print("could not load plugin\n");
         exit(-1);
-    }
-
+    } 
+    
     if (!g_module_symbol (plugin->module, "initialise", (gpointer *)&plugin->initialise)) {
 
         g_print("couldn't get initialise function pointer\n");
